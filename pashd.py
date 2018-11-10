@@ -11,13 +11,14 @@
 #   considering agent's current position as the start
 
 import random
-from sys import argv, stderr
 from pqdict import pqdict
+from sys import argv, stderr
+from typing import Dict, List, Optional
 from level import NoPathFound, Level
 
 
 class Agent:
-    def __init__(self, agent_id: float, level: Level):
+    def __init__(self, agent_id: int, level: Level):
         self.id = agent_id
         self.level = level
         self.pos = level.scenario.agents[agent_id]
@@ -39,13 +40,15 @@ class Agent:
                 self.path = path
                 return
 
-    def pathfind_to(self, goal, first_move_disallow=set()):
+    def pathfind_to(self,
+                    goal: int,
+                    first_move_disallow=set()) -> Optional[List[int]]:
         g = self.level.g
         nan = float("nan")
         closed = set()
         opened = pqdict({self.pos: 0})
-        g_costs = {}
-        predecessors = {}
+        g_costs: Dict[int, float] = {}
+        predecessors: Dict[int, int] = {}
         g_costs[self.pos] = 0
         first_move = True
         while len(opened) > 0:
@@ -71,21 +74,24 @@ class Agent:
             first_move = False
         return None
 
-    def manhattan_distance(self, x, y):
+    def manhattan_distance(self, x: int, y: int) -> int:
         x_coords = self.level.id_to_coords(x)
         y_coords = self.level.id_to_coords(y)
         return abs(x_coords[0] - y_coords[0]) + abs(x_coords[1] - y_coords[1])
 
     def peek_move(self):
-        if self.path is not None:
-            raise NoPathFound()
+        if self.path is None:
+            return self.pos
         if len(self.path) <= self.next_path_idx:
             return None
         return self.path[self.next_path_idx]
 
     def do_move(self):
-        if self.path is not None:
-            raise NoPathFound()
+        if self.path is None:
+            print("Agent {} has no path, staying at {}"
+                  .format(self.id, self.pos),
+                  file=stderr)
+            return self.pos
         if len(self.path) <= self.next_path_idx:
             raise StopIteration()
         self.pos = self.path[self.next_path_idx]
@@ -109,7 +115,7 @@ def plan_evacuation(level, random_seed=42):
 
         for i in agent_order:
             next_pos = agents[i].peek_move()
-            if next_pos is not None:
+            if next_pos is None:
                 continue
             finished = False
             if next_pos in occupied:
@@ -130,11 +136,11 @@ def reconstruct_path(predecessors, goal):
 
 def main():
     map_path, scen_path = argv[1], argv[2]
-    l = Level(map_path, scen_path)
-    if len(l.frontier) == 0:
+    lvl = Level(map_path, scen_path)
+    if len(lvl.frontier) == 0:
         print("No passage to safety exists!", file=stderr)
         exit(2)
-    paths = plan_evacuation(l)
+    paths = plan_evacuation(lvl)
     for path in paths:
         print(*path)
 
