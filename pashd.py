@@ -14,19 +14,23 @@ import random
 from pqdict import pqdict
 from sys import argv, stderr
 from typing import Dict, List, Optional
-from level import NoPathFound, Level
+from level import Level
 
 
 class Agent:
     def __init__(self, agent_id: int, level: Level):
         self.id = agent_id
         self.level = level
-        self.pos = level.scenario.agents[agent_id]
+        self.taken_path = [level.scenario.agents[agent_id]]
         self.retarget()
+
+    @property
+    def pos(self) -> int:
+        return self.taken_path[-1]
 
     def retarget(self, first_move_disallow=set()):
         self.next_path_idx = 1
-        self.path = None
+        self.future_path = None
         goal_candidates = map(
             lambda x: (x, self.manhattan_distance(self.pos, x)),
             self.level.frontier)
@@ -37,7 +41,7 @@ class Agent:
                 continue
             path = self.pathfind_to(candidate, first_move_disallow)
             if path:
-                self.path = path
+                self.future_path = path
                 return
 
     def pathfind_to(self,
@@ -80,21 +84,22 @@ class Agent:
         return abs(x_coords[0] - y_coords[0]) + abs(x_coords[1] - y_coords[1])
 
     def peek_move(self):
-        if self.path is None:
+        if self.future_path is None:
             return self.pos
-        if len(self.path) <= self.next_path_idx:
+        if len(self.future_path) <= self.next_path_idx:
             return None
-        return self.path[self.next_path_idx]
+        return self.future_path[self.next_path_idx]
 
     def do_move(self):
-        if self.path is None:
+        if self.future_path is None:
             print("Agent {} has no path, staying at {}"
                   .format(self.id, self.pos),
                   file=stderr)
+            self.taken_path.append(self.pos)
             return self.pos
-        if len(self.path) <= self.next_path_idx:
+        if len(self.future_path) <= self.next_path_idx:
             raise StopIteration()
-        self.pos = self.path[self.next_path_idx]
+        self.taken_path.append(self.future_path[self.next_path_idx])
         self.next_path_idx += 1
         return self.pos
 
@@ -102,7 +107,6 @@ class Agent:
 def plan_evacuation(level, random_seed=42):
     random.seed(random_seed)
     agents = [Agent(i, level) for i in range(len(level.scenario.agents))]
-    agent_paths = [[agent.pos] for agent in agents]
     agent_order = list(range(len(agents)))
     finished = False
     while not finished:
@@ -117,13 +121,14 @@ def plan_evacuation(level, random_seed=42):
             next_pos = agents[i].peek_move()
             if next_pos is None:
                 continue
-            finished = False
             if next_pos in occupied:
                 agents[i].retarget(occupied)
+            current_pos = agents[i].pos
             next_pos = agents[i].do_move()
-            agent_paths[i].append(next_pos)
+            if current_pos != next_pos:
+                finished = False
             occupied.add(next_pos)
-    return agent_paths
+    return [agent.taken_path for agent in agents]
 
 
 def reconstruct_path(predecessors, goal):
@@ -141,8 +146,11 @@ def main():
         print("No passage to safety exists!", file=stderr)
         exit(2)
     paths = plan_evacuation(lvl)
-    for path in paths:
+    for agent_id, path in enumerate(paths):
         print(*path)
+        if path[-1] in lvl.scenario.danger:
+            print("Agent", agent_id, "could not evacuate. He dead.",
+                  file=stderr)
 
 
 if __name__ == "__main__":
