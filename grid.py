@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+from typing import Tuple
 import arcade
 from arcade.color import BLACK, WHITE
 import level
@@ -19,6 +20,7 @@ class Grid(arcade.Window):
         self.danger = set(scenario.danger_coords(self.grid_size[1]))
         self.screen_size = (self.grid_size[1] * (cell_size + border) + border,
                             self.grid_size[0] * (cell_size + border) + border)
+        self.running = False
         self.__update_walls()
         self.__update_danger()
         if paths is not None:
@@ -40,31 +42,37 @@ class Grid(arcade.Window):
             self.agents.draw()
 
     def on_update(self, delta_time: float):
-        if self.agents is not None:
+        if self.agents is not None and self.running:
             self.path_idx += 1
             self.__update_agents()
 
     def on_mouse_press(self, x: float,  y: float, button: int, modifiers: int):
+        self.running = True
         if button == 1:
             self.__update_drag_coords(x, y)
         elif button == 4:
             d = map(lambda x: level.coords_to_id(self.grid_size[1], *x),
                     self.danger)
             print(*sorted(d))
+        elif button == 2:
+            print(level.coords_to_id(
+                self.grid_size[1], *self.__coords_for_pos(x, y)))
 
-    def on_mouse_drag(self, x: float, y: float, dx: float, dy: float, button: int, modifiers: int):
+    def on_mouse_drag(self, x: float, y: float, dx: float, dy: float,
+                      button: int, modifiers: int):
         if button != 1:
             return
         self.__update_drag_coords(x, y)
 
     def __update_drag_coords(self, x, y):
-        row = self.grid_size[0] - y // (self.cell_size + self.border) - 1
-        col = x // (self.cell_size + self.border)
+        row, col = self.__coords_for_pos(x, y)
         if (row, col) != self.current_drag_coords:
             self.current_drag_coords = (row, col)
             is_valid_row = row >= 0 and row < self.grid_size[0]
             is_valid_col = col >= 0 and col < self.grid_size[1]
-            if is_valid_row and is_valid_col and self.level_map[row][col] != "@":
+            if (is_valid_row and
+                    is_valid_col and
+                    self.level_map[row][col] != "@"):
                 self.danger.add(self.current_drag_coords)
                 self.__update_danger()
 
@@ -90,7 +98,7 @@ class Grid(arcade.Window):
                                                    pos[1],
                                                    self.cell_size,
                                                    self.cell_size,
-                                                   arcade.color.RED)
+                                                   arcade.color.BABY_PINK)
             danger_cells.append(shape)
         self.danger_cells = danger_cells
 
@@ -114,6 +122,11 @@ class Grid(arcade.Window):
         y = self.screen_size[1] - (
             row * cell_with_border + self.border + self.cell_size/2)
         return (x, y)
+
+    def __coords_for_pos(self, x: float, y: float) -> Tuple[int, int]:
+        row = self.grid_size[0] - y // (self.cell_size + self.border) - 1
+        col = x // (self.cell_size + self.border)
+        return (row, col)
 
 
 def parse_paths(path: str):
