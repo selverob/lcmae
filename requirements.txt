@@ -1,4 +1,3 @@
 arcade>=1.3
 networkx==2.2
-matplotlib>=3.0
 pqdict>=1.0
