@@ -1,13 +1,15 @@
 from astar import AStar
 from level import Level
+from graph.interface import Node
+from graph.nx_graph import NxGraph, NxNode
 
 
 class RRAHeuristic(AStar):
-    def __init__(self, level: Level, position: int, goal: int):
+    def __init__(self, level: Level, position: NxNode, goal: NxNode):
         self.level = level
-        super().__init__(level.g, self.manhattan_distance, goal, position)
+        super().__init__(NxGraph(level.g), self.manhattan_distance, goal, position)
 
-    def distance(self, position: int) -> int:
+    def distance(self, position: NxNode) -> int:
         if position not in self.closed:
             self.goal = position
             if not self.pathfind():
@@ -17,7 +19,7 @@ class RRAHeuristic(AStar):
                     self.start, position))
         return int(self.g_costs[position])
 
-    def manhattan_distance(self, x: int, y: int) -> int:
-        x_coords = self.level.id_to_coords(x)
-        y_coords = self.level.id_to_coords(y)
+    def manhattan_distance(self, x: Node, y: Node) -> int:
+        x_coords = self.level.id_to_coords(x.pos())
+        y_coords = self.level.id_to_coords(y.pos())
         return abs(x_coords[0] - y_coords[0]) + abs(x_coords[1] - y_coords[1])

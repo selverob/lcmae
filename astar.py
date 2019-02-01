@@ -1,21 +1,20 @@
 from typing import Callable, Dict, List, Set
 from pqdict import pqdict
-import networkx as nx
-
+from graph.interface import Graph, Node
 
 class AStar:
     def __init__(self,
-                 g: nx.Graph,
-                 heuristic: Callable[[int, int], int],
-                 start: int,
-                 goal: int):
+                 g: Graph,
+                 heuristic: Callable[[Node, Node], int],
+                 start: Node,
+                 goal: Node):
         self.g = g
         self.heuristic = heuristic
         self.opened = pqdict(
             {start: heuristic(start, goal)})
-        self.closed: Set[int] = set()
+        self.closed: Set[Node] = set()
         self.g_costs = {start: 0.0}
-        self.predecessors: Dict[int, int] = {}
+        self.predecessors: Dict[Node, Node] = {}
         self.start = start
         self.goal = goal
 
@@ -25,7 +24,7 @@ class AStar:
             self.closed.add(curr)
             if curr == self.goal:
                 return True
-            for n in self.g[curr].keys():
+            for n in self.g.neighbors(curr):
                 if n in self.closed:
                     continue
                 considered_g_cost = self.g_costs[curr] + 1
@@ -41,7 +40,8 @@ class AStar:
                     self.opened[n] = f_cost
         return False
 
-    def reconstruct_path(self) -> List[int]:
+
+    def reconstruct_path(self) -> List[Node]:
         path = [self.goal]
         while self.predecessors.get(path[-1], None):
             path.append(self.predecessors[path[-1]])
