@@ -13,9 +13,9 @@ class NxNode(Node):
         return self._id
 
 
-class NxGraph(Graph):
+class NxGraph(Graph[NxNode]):
     def __init__(self, g: nx.Graph):
         self.g = g
     
-    def neighbors(self, node: Node) -> List[Node]:
+    def neighbors(self, node: NxNode) -> List[NxNode]:
         return [NxNode(k) for k in self.g[node.id()].keys()]

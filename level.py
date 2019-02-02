@@ -48,7 +48,6 @@ class Level:
             self.__parse_map(map_f)
             self.scenario = Scenario.from_file(scenario_path)
             self.__add_danger()
-            # self.__add_goal()
             self.__add_frontier()
 
     def coords_to_id(self, row, col):
@@ -60,21 +59,6 @@ class Level:
     def __add_danger(self):
         for n in self.scenario.danger:
             self.g.nodes[n]["dangerous"] = True
-
-    # def __add_goal(self):
-    #     goal_node = max(self.g.nodes) + 1
-    #     self.g.add_node(goal_node)
-    # def __add_goal(self):
-    #     goal_node = max(self.g.nodes) + 1
-    #     self.g.add_node(goal_node)
-    #     for node in self.g.nodes:
-    #         if not self.g.nodes[node]["dangerous"]:
-    #             self.g.add_edge(node, goal_node)
-    #     self.goal = goal_node
-    #     for node in self.g.nodes:
-    #         if not self.g.nodes[node]["dangerous"]:
-    #             self.g.add_edge(node, goal_node)
-    #     self.goal = goal_node
 
     def __add_frontier(self):
         self.frontier = []

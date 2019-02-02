@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Generic, TypeVar
+
+N = TypeVar("N")
 
 class Node(ABC):
     @abstractmethod
@@ -19,7 +21,7 @@ class Node(ABC):
     def __repr__(self):
         return f"Node({self.id()})"
 
-class Graph(ABC):
+class Graph(Generic[N], ABC):
     @abstractmethod
-    def neighbors(self, node: Node) -> List[Node]:
+    def neighbors(self, node: N) -> List[N]:
         raise NotImplementedError()
