@@ -10,6 +10,8 @@ class RRAHeuristic(AStar):
         super().__init__(NxGraph(level.g), self.manhattan_distance, goal, position)
 
     def distance(self, position: NxNode) -> int:
+        if position == NxNode(89):
+            breakpoint
         if position not in self.closed:
             self.goal = position
             if not self.pathfind():

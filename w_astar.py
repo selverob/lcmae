@@ -1,30 +1,33 @@
 from typing import Callable, Dict, List, Set
 from pqdict import pqdict
-from graph.interface import Graph, Node
-import graph.nx_graph
+from graph.reservation_graph import ReservationGraph, ReservationNode
 
-class AStar:
+
+class WindowedAstar:
     def __init__(self,
-                 g: Graph,
-                 heuristic: Callable[[Node, Node], int],
-                 start: Node,
-                 goal: Node):
+                 g: ReservationGraph,
+                 rra: Callable[[ReservationNode, ReservationNode], int],
+                 start: ReservationNode,
+                 goal: ReservationNode,
+                 depth: int):
         self.g = g
-        self.heuristic = heuristic
-        self.opened = pqdict(
-            {start: heuristic(start, goal)})
-        self.closed: Set[Node] = set()
-        self.g_costs = {start: 0.0}
-        self.predecessors: Dict[Node, Node] = {}
+        self.rra = rra
         self.start = start
         self.goal = goal
+        self.depth = depth
+        self.opened = pqdict({start: rra(start, goal)})
+        self.closed: Set[ReservationNode] = set()
+        self.g_costs = {start: 0.0}
+        self.last_node = None
+        self.predecessors: Dict[ReservationNode, ReservationNode] = {}
 
     def pathfind(self) -> bool:
         while len(self.opened) > 0:
             curr = self.opened.pop()
-            if curr == graph.nx_graph.NxNode(90):
-                breakpoint
             self.closed.add(curr)
+            if curr.t == self.start.t + self.depth:
+                self.last_node = curr
+                return True
             for n in self.g.neighbors(curr):
                 if n in self.closed:
                     continue
@@ -34,18 +37,16 @@ class AStar:
                 self.g_costs[n] = considered_g_cost
                 self.predecessors[n] = curr
                 f_cost = (considered_g_cost +
-                          self.heuristic(n, self.goal))
+                          self.rra(n, self.goal))
                 if n not in self.opened:
                     self.opened.additem(n, f_cost)
                 else:
                     self.opened[n] = f_cost
-            if curr.pos() == self.goal.pos():
-                return True
         return False
 
 
-    def reconstruct_path(self) -> List[Node]:
-        path = [self.goal]
+    def reconstruct_path(self) -> List[ReservationNode]:
+        path = [self.last_node]
         while self.predecessors.get(path[-1], None):
             path.append(self.predecessors[path[-1]])
         path.reverse()
