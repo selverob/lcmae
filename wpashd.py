@@ -64,11 +64,13 @@ class Agent:
             self.retarget()
             self.reservations.cancel_reservation(self.pos)
             self.next_path = deque(self.pathfind_to(self.goal))
+            self._log(f"Next: {self.next_path}")
             self.reserve_next_path()
             self.taken_path.pop()
         if len(self.next_path) == LOOKAHEAD // 2:
             self.cancel_next_path_reservations()
             self.next_path = deque(self.pathfind_to(self.goal)[1:])
+            self._log(f"Next: {self.next_path}")
             self.reserve_next_path()
         self.taken_path.append(self.next_path.popleft())
 
@@ -77,13 +79,25 @@ class Agent:
 
     def reserve_next_path(self):
         for node in self.next_path:
+            this_r = self.reservations.reserved_by(node)
+            if this_r != None and this_r != self.id:
+                self._log(f"WARN: Overwriting reservation ({node})")
+            next_r = self.reservations.reserved_by(node.incremented_t())
+            if next_r != None and next_r != self.id:
+                self._log(f"WARN: Overwriting reservation ({node.incremented_t()} - inc)")
             self.reservations.reserve(node, self.id)
             self.reservations.reserve(node.incremented_t(), self.id)
     
     def cancel_next_path_reservations(self):
         for node in self.next_path:
-            self.reservations.cancel_reservation(node)
-            self.reservations.cancel_reservation(node.incremented_t())
+            if self.reservations.reserved_by(node) == self.id:
+                self.reservations.cancel_reservation(node)
+            next_node = node.incremented_t()
+            if self.reservations.reserved_by(next_node) == self.id:
+                self.reservations.cancel_reservation(next_node)
+    
+    def _log(self, msg):
+        print(f"a={self.id} t={self.taken_path[-1].t}: {msg}", file=stderr)
 
 def plan_evacuation(level, random_seed=42):
     random.seed(random_seed)
@@ -92,18 +106,18 @@ def plan_evacuation(level, random_seed=42):
     for agent in agents:
         reservations.reserve(agent.pos, agent.id)
     agent_order = list(range(len(agents)))
-    finished = False
-    while not finished:
-        finished = True
+    deadlock_timer = 0
+    # Time is watched independently by agents but this variable makes
+    # debugging easier
+    t = 0
+    while deadlock_timer < 15:
         random.shuffle(agent_order)
+        deadlock_timer += 1
         for i in agent_order:
             agents[i].step()
             if len(agents[i].taken_path) < 2 or agents[i].taken_path[-1].pos() != agents[i].taken_path[-2].pos():
-                finished = False
-    for agent in agents:
-        print(f"Agent {agent.id}", file=stderr)
-        for n in agent.taken_path:
-            print(f"t:{n.t} - {n.pos()}", file=stderr)
+                deadlock_timer = 0
+        t += 1
     return [list(map(ReservationNode.pos, agent.taken_path)) for agent in agents]
 
 
@@ -117,7 +131,8 @@ def main():
         exit(2)
     paths = plan_evacuation(lvl)
     for agent_id, path in enumerate(paths):
-        print(*path)
+        num_strings = ["{:02d}".format(n) for n in path]
+        print(*num_strings)
         if path[-1] in lvl.scenario.danger:
             print("Agent", agent_id, "could not evacuate. He dead.",
                   file=stderr)

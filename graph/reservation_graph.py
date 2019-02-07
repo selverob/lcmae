@@ -1,6 +1,6 @@
 from __future__ import annotations
 from graph.interface import Graph, Node
-from typing import List
+from typing import List, Optional
 import networkx as nx
 
 class ReservationNode(Node):
@@ -28,14 +28,14 @@ class ReservationGraph(Graph[ReservationNode]):
         neighbors = []
         for k in self.g[n.pos()].keys():
             rn = ReservationNode(k, n.t + 1)
-            if self.reserved_by(rn) is None:
+            if self.reserved_by(rn) is None and self.reserved_by(rn.incremented_t()) is None:
                 neighbors.append(rn)
         this_node = n.incremented_t()
-        if self.reserved_by(this_node) is None:
+        if self.reserved_by(this_node) is None and self.reserved_by(this_node.incremented_t()) is None:
             neighbors.append(this_node)
         return neighbors
   
-    def reserved_by(self, n: ReservationNode) -> int:
+    def reserved_by(self, n: ReservationNode) -> Optional[int]:
         return self.g.nodes[n.pos()]["reservations"].get(n.t)
     
     def reserve(self, n: ReservationNode, agent: int):
