@@ -32,6 +32,7 @@ class Agent:
         self.taken_path = [ReservationNode(level.scenario.agents[agent_id], 0)]
         self.next_path: typing.Deque[ReservationNode] = deque()
         self.reservations = reservations
+        self._first_step_made = False
         self.retarget()
 
     @property
@@ -60,9 +61,10 @@ class Agent:
         self.rra = RRAHeuristic(self.level, NxNode(self.pos.pos()), NxNode(self.goal.pos()))
 
     def step(self):
-        if len(self.next_path) == 0:
+        if not self._first_step_made:
+            self._first_step_made = True
             self.retarget()
-            self.reservations.cancel_reservation(self.pos)
+            self.cancel_next_path_reservations()
             self.next_path = deque(self.pathfind_to(self.goal))
             self._log(f"Next: {self.next_path}")
             self.reserve_next_path()
@@ -104,12 +106,15 @@ def plan_evacuation(level, random_seed=42):
     reservations = ReservationGraph(level.g)
     agents = [Agent(i, level, reservations) for i in range(len(level.scenario.agents))]
     for agent in agents:
-        reservations.reserve(agent.pos, agent.id)
+        for i in range(LOOKAHEAD):
+            n = agent.pos.incremented_t(i)
+            reservations.reserve(n, agent.id)
+            agent.next_path.append(n)
     agent_order = list(range(len(agents)))
-    deadlock_timer = 0
     # Time is watched independently by agents but this variable makes
     # debugging easier
     t = 0
+    deadlock_timer = 0
     while deadlock_timer < 15:
         random.shuffle(agent_order)
         deadlock_timer += 1

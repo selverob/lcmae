@@ -14,8 +14,8 @@ class ReservationNode(Node):
     def pos(self) -> int:
         return self._pos
 
-    def incremented_t(self) -> ReservationNode:
-        return ReservationNode(self.pos(), self.t + 1)
+    def incremented_t(self, delta = 1) -> ReservationNode:
+        return ReservationNode(self.pos(), self.t + delta)
 
 class ReservationGraph(Graph[ReservationNode]):
     def __init__(self, underlying_graph: nx.Graph):
