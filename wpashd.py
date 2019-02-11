@@ -19,7 +19,7 @@ import typing
 from w_astar import WindowedAstar
 from closest_frontier import ClosestFrontierFinder
 from graph.nx_graph import NxNode
-from graph.reservation_graph import ReservationGraph, ReservationNode
+from graph.reservation_graph import ReservationGraph, ReservationNode, Reservation
 from level import Level
 from rra import RRAHeuristic
 
@@ -82,26 +82,29 @@ class Agent:
 
     def reserve_next_path(self):
         for node in self.next_path:
-            this_r = self.reservations.reserved_by(node)
-            if this_r != None and this_r != self.id:
+            this_r = self.reservations.get(node)
+            if this_r is not None and this_r.agent != self.id:
                 self._log(f"WARN: Overwriting reservation ({node})")
-            next_r = self.reservations.reserved_by(node.incremented_t())
-            if next_r != None and next_r != self.id:
+            next_r = self.reservations.get(node.incremented_t())
+            if next_r is not None and next_r.agent != self.id:
                 self._log(f"WARN: Overwriting reservation ({node.incremented_t()} - inc)")
-            self.reservations.reserve(node, self.id)
-            self.reservations.reserve(node.incremented_t(), self.id)
+            self.reservations.reserve(Reservation(node, self.id, 2))
+            self.reservations.reserve(Reservation(node.incremented_t(), self.id, 2))
     
     def cancel_reservations(self):
         for node in self.next_path:
-            if self.reservations.reserved_by(node) == self.id:
+            r = self.reservations.get(node)
+            if r is not None and r.agent == self.id:
                 self.reservations.cancel_reservation(node)
             next_node = node.incremented_t()
-            if self.reservations.reserved_by(next_node) == self.id:
+            r = self.reservations.get(next_node)
+            if r is not None and r.agent == self.id:
                 self.reservations.cancel_reservation(next_node)
     
     def check_reservations(self) -> bool:
         for node in self.next_path:
-            if self.reservations.reserved_by(node) != self.id:
+            res = self.reservations.get(node)
+            if res is not None and res.agent != self.id:
                 return False
         return True
     
@@ -115,7 +118,7 @@ def plan_evacuation(level, random_seed=42):
     for agent in agents:
         for i in range(LOOKAHEAD):
             n = agent.pos.incremented_t(i)
-            reservations.reserve(n, agent.id)
+            reservations.reserve(Reservation(n, agent.id, 2))
             agent.next_path.append(n)
     safe = set([agent.id for agent in agents if agent.is_safe()])
     endangered = set([agent.id for agent in agents if not agent.is_safe()])

@@ -17,18 +17,24 @@ class ReservationNode(Node):
     def incremented_t(self, delta = 1) -> ReservationNode:
         return ReservationNode(self.pos(), self.t + delta)
 
+class Reservation:
+    def __init__(self, node: ReservationNode, agent: int, priority: int):
+        self.node = node
+        self.agent = agent
+        self.priority = priority
+
 class ReservationGraph():
     def __init__(self, underlying_graph: nx.Graph):
         self.g = underlying_graph
         for n in self.g.nodes:
             self.g.nodes[n]["reservations"] = dict()
-            self.g.nodes[n]["occupied"] = dict()
+            #self.g.nodes[n]["occupied"] = dict()
   
-    def reserved_by(self, n: ReservationNode) -> Optional[int]:
+    def get(self, n: ReservationNode) -> Optional[Reservation]:
         return self.g.nodes[n.pos()]["reservations"].get(n.t)
     
-    def reserve(self, n: ReservationNode, agent: int):
-        self.g.nodes[n.pos()]["reservations"][n.t] = agent
+    def reserve(self, r: Reservation):
+        self.g.nodes[r.node.pos()]["reservations"][r.node.t] = r
     
     def cancel_reservation(self, n: ReservationNode):
         # We cannot be sure cancelled reservation will exist

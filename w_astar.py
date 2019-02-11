@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Set, Tuple
+import typing
 from pqdict import pqdict
 from graph.reservation_graph import ReservationGraph, ReservationNode
 
@@ -7,7 +7,7 @@ class WindowedAstar:
     def __init__(self,
                  g: ReservationGraph,
                  agent,
-                 rra: Callable[[ReservationNode, ReservationNode], int],
+                 rra: typing.Callable[[ReservationNode, ReservationNode], int],
                  start: ReservationNode,
                  goal: ReservationNode,
                  depth: int):
@@ -18,10 +18,10 @@ class WindowedAstar:
         self.goal = goal
         self.depth = depth
         self.opened = pqdict({start: rra(start, goal)})
-        self.closed: Set[ReservationNode] = set()
+        self.closed: typing.Set[ReservationNode] = set()
         self.g_costs = {start: 0.0}
-        self.last_node = None
-        self.predecessors: Dict[ReservationNode, ReservationNode] = {}
+        self.last_node: typing.Optional[ReservationNode] = None
+        self.predecessors: typing.Dict[ReservationNode, ReservationNode] = {}
 
     def pathfind(self) -> bool:
         while len(self.opened) > 0:
@@ -46,7 +46,7 @@ class WindowedAstar:
                     self.opened[n] = f_cost
         return False
 
-    def neighbors(self, n: ReservationNode) -> List[Tuple[ReservationNode, int]]:
+    def neighbors(self, n: ReservationNode) -> typing.List[typing.Tuple[ReservationNode, int]]:
         neighbors = []
         for k in self.g.g[n.pos()].keys():
             rn = ReservationNode(k, n.t + 1)
@@ -62,13 +62,13 @@ class WindowedAstar:
             neighbors.append((this_node, 2))
         return neighbors
 
-    def reconstruct_path(self) -> List[ReservationNode]:
+    def reconstruct_path(self) -> typing.List[ReservationNode]:
         path = [self.last_node]
-        while self.predecessors.get(path[-1], None):
+        while path[-1] in self.predecessors:
             path.append(self.predecessors[path[-1]])
         path.reverse()
-        return path
+        return typing.cast(typing.List[ReservationNode], path)
 
     def _reservable_by(self, node: ReservationNode) -> bool:
-        owner = self.g.reserved_by(node)
-        return owner is None or owner == self.agent.id
+        reservation = self.g.get(node)
+        return reservation is None or reservation.agent == self.agent.id
