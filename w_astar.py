@@ -46,7 +46,6 @@ class WindowedAstar:
                     self.opened[n] = f_cost
         return False
 
-
     def neighbors(self, n: ReservationNode) -> List[Tuple[ReservationNode, int]]:
         neighbors = []
         for k in self.g.g[n.pos()].keys():
@@ -70,7 +69,6 @@ class WindowedAstar:
         path.reverse()
         return path
 
-        
     def _reservable_by(self, node: ReservationNode) -> bool:
         owner = self.g.reserved_by(node)
         return owner is None or owner == self.agent.id

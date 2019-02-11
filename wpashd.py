@@ -78,7 +78,7 @@ class Agent:
         self.taken_path.append(self.next_path.popleft())
 
     def is_safe(self) -> bool:
-        return not self.level.g.nodes[self.pos]["dangerous"]
+        return not self.level.g.nodes[self.pos.pos()]["dangerous"]
 
     def reserve_next_path(self):
         for node in self.next_path:
@@ -117,18 +117,40 @@ def plan_evacuation(level, random_seed=42):
             n = agent.pos.incremented_t(i)
             reservations.reserve(n, agent.id)
             agent.next_path.append(n)
-    agent_order = list(range(len(agents)))
+    safe = set([agent.id for agent in agents if agent.is_safe()])
+    endangered = set([agent.id for agent in agents if not agent.is_safe()])
     # Time is watched independently by agents but this variable makes
     # debugging easier
     t = 0
     deadlock_timer = 0
     while deadlock_timer < 15:
-        random.shuffle(agent_order)
+        print(f"Safe: {safe}", file=stderr)
+        print(f"Endangered: {endangered}", file=stderr)
         deadlock_timer += 1
-        for i in agent_order:
+        endangered_order = list(endangered)
+        newly_safe = []
+        newly_endangered = []
+        random.shuffle(endangered_order)
+        for i in endangered_order:
             agents[i].step()
             if len(agents[i].taken_path) < 2 or agents[i].taken_path[-1].pos() != agents[i].taken_path[-2].pos():
                 deadlock_timer = 0
+            if agents[i].is_safe():
+                newly_safe.append(i)
+        safe_order = list(safe)
+        random.shuffle(safe_order)
+        for i in safe_order:
+            agents[i].step()
+            if len(agents[i].taken_path) < 2 or agents[i].taken_path[-1].pos() != agents[i].taken_path[-2].pos():
+                deadlock_timer = 0
+            if not agents[i].is_safe():
+                newly_endangered.append(i)
+        for agent in newly_safe:
+            endangered.remove(agent)
+            safe.add(agent)
+        for agent in newly_endangered:
+            safe.remove(agent)
+            endangered.add(agent)
         t += 1
     return [list(map(ReservationNode.pos, agent.taken_path)) for agent in agents]
 
