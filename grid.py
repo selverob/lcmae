@@ -4,7 +4,7 @@ from typing import Tuple
 import arcade
 from arcade.color import BLACK, WHITE
 import level
-from sys import argv
+from sys import argv, exit
 
 
 class Grid(arcade.Window):
@@ -139,12 +139,25 @@ def parse_paths(path: str):
             result.append(list(map(lambda s: int(s), line.strip().split(" "))))
     return result
 
+def check_paths(paths):
+    l = len(paths[0])
+    for p in paths:
+        if len(p) != l:
+            print("Not all paths have equal sizes")
+            sys.exit(1)
+    for t in range(l):
+        s = set()
+        for p in paths:
+            s.add(p[t])
+        if len(s) != len(paths):
+            print(f"Collision at time {t}")
 
 def main():
     map_path, scen_path = argv[1], argv[2]
     paths = None
     if len(argv) == 4:
         paths = parse_paths(argv[3])
+    check_paths(paths)
     lines = []
     with open(map_path) as map_f:
         for _ in range(4):
