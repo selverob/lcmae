@@ -144,7 +144,7 @@ def check_paths(paths):
     for p in paths:
         if len(p) != l:
             print("Not all paths have equal sizes")
-            sys.exit(1)
+            exit(1)
     for t in range(l):
         s = set()
         for p in paths:
