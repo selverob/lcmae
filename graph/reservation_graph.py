@@ -17,23 +17,12 @@ class ReservationNode(Node):
     def incremented_t(self, delta = 1) -> ReservationNode:
         return ReservationNode(self.pos(), self.t + delta)
 
-class ReservationGraph(Graph[ReservationNode]):
+class ReservationGraph():
     def __init__(self, underlying_graph: nx.Graph):
         self.g = underlying_graph
         for n in self.g.nodes:
             self.g.nodes[n]["reservations"] = dict()
             self.g.nodes[n]["occupied"] = dict()
-    
-    def neighbors(self, n: ReservationNode) -> List[ReservationNode]:
-        neighbors = []
-        for k in self.g[n.pos()].keys():
-            rn = ReservationNode(k, n.t + 1)
-            if self.reserved_by(rn) is None and self.reserved_by(rn.incremented_t()) is None:
-                neighbors.append(rn)
-        this_node = n.incremented_t()
-        if self.reserved_by(this_node) is None and self.reserved_by(this_node.incremented_t()) is None:
-            neighbors.append(this_node)
-        return neighbors
   
     def reserved_by(self, n: ReservationNode) -> Optional[int]:
         return self.g.nodes[n.pos()]["reservations"].get(n.t)
@@ -48,9 +37,3 @@ class ReservationGraph(Graph[ReservationNode]):
         # same node at both t and t+1, they'll try to cancel
         # the reservation for t+1 twice
         self.g.nodes[n.pos()]["reservations"].pop(n.t, None)
-
-    # def occupied_by(self, n: ReservationNode) -> int:
-    #     return n.t in self.g.nodes[n.pos()]["occupied"]
-    
-    # def occupy(self, n: ReservationNode):
-    #     self.g.nodes[n.pos()]["occupied"].insert(n.t)

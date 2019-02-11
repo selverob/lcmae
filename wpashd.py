@@ -40,7 +40,7 @@ class Agent:
         return self.taken_path[-1]
 
     def pathfind_to(self, goal: ReservationNode) -> typing.List[ReservationNode]:
-        search = WindowedAstar(self.reservations, self._rra, self.pos, self.goal, LOOKAHEAD)
+        search = WindowedAstar(self.reservations, self, self._rra, self.pos, self.goal, LOOKAHEAD)
         if not search.pathfind():
             # closest_frontier finder should either have found a path to safety 
             # and we should be able to find it in spacetime, even if it becomes
@@ -60,20 +60,21 @@ class Agent:
             raise RuntimeError("No safe zone found")
         self.rra = RRAHeuristic(self.level, NxNode(self.pos.pos()), NxNode(self.goal.pos()))
 
+    def replan(self):
+        self.cancel_reservations()
+        self.next_path = deque(self.pathfind_to(self.goal)[1:])
+        self._log(f"Next: {self.next_path}")
+        self.reserve_next_path()
+
     def step(self):
         if not self._first_step_made:
             self._first_step_made = True
             self.retarget()
-            self.cancel_next_path_reservations()
-            self.next_path = deque(self.pathfind_to(self.goal))
-            self._log(f"Next: {self.next_path}")
-            self.reserve_next_path()
-            self.taken_path.pop()
+            self.replan()
         if len(self.next_path) == LOOKAHEAD // 2:
-            self.cancel_next_path_reservations()
-            self.next_path = deque(self.pathfind_to(self.goal)[1:])
-            self._log(f"Next: {self.next_path}")
-            self.reserve_next_path()
+            self.replan()
+        if not self.check_reservations():
+            self.replan()
         self.taken_path.append(self.next_path.popleft())
 
     def is_safe(self) -> bool:
@@ -90,13 +91,19 @@ class Agent:
             self.reservations.reserve(node, self.id)
             self.reservations.reserve(node.incremented_t(), self.id)
     
-    def cancel_next_path_reservations(self):
+    def cancel_reservations(self):
         for node in self.next_path:
             if self.reservations.reserved_by(node) == self.id:
                 self.reservations.cancel_reservation(node)
             next_node = node.incremented_t()
             if self.reservations.reserved_by(next_node) == self.id:
                 self.reservations.cancel_reservation(next_node)
+    
+    def check_reservations(self) -> bool:
+        for node in self.next_path:
+            if self.reservations.reserved_by(node) != self.id:
+                return False
+        return True
     
     def _log(self, msg):
         print(f"a={self.id} t={self.taken_path[-1].t}: {msg}", file=stderr)
