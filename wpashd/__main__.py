@@ -1,7 +1,7 @@
 import random
 from sys import stderr, argv
 from graph.reservation_graph import ReservationGraph, Reservation, ReservationNode
-from wpashd.agent import Agent, LOOKAHEAD
+from wpashd.agent import Agent
 from level import Level
 
 def plan_evacuation(level, random_seed=42):
@@ -9,7 +9,7 @@ def plan_evacuation(level, random_seed=42):
     reservations = ReservationGraph(level.g)
     agents = [Agent(i, level, reservations) for i in range(len(level.scenario.agents))]
     for agent in agents:
-        for i in range(LOOKAHEAD):
+        for i in range(agent.lookahead):
             n = agent.pos.incremented_t(i)
             reservations.reserve(Reservation(n, agent.id, 2))
             agent.next_path.append(n)
