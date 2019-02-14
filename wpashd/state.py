@@ -5,3 +5,7 @@ class State:
     @abstractmethod
     def step(self) -> ReservationNode:
         raise NotImplementedError()
+
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError()

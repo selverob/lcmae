@@ -17,8 +17,10 @@ from sys import argv, stderr
 import typing
 
 from graph.reservation_graph import ReservationGraph, ReservationNode, Reservation
+from wpashd.state import State
 from level import Level
 from wpashd.evacuation import Evacuating
+from wpashd.surf import Surfing
 
 class Agent:
     def __init__(self, agent_id: int, level: Level, reservations: ReservationGraph):
@@ -28,29 +30,41 @@ class Agent:
         self.next_path: typing.Deque[ReservationNode] = deque()
         self.taken_path = [ReservationNode(level.scenario.agents[agent_id], 0)]
         self.reservations = reservations
-        self.state = Evacuating(self)
+        # Initialized in step()
+        self.state: typing.Optional[State] = None
 
     @property
     def pos(self) -> ReservationNode:
         return self.taken_path[-1]
 
     def step(self):
-        self.state.step()
-        self.taken_path.append(self.next_path.popleft())
+        # Initialized here to respect the random
+        # agent order in main function
+        if self.state is None and self.is_safe():
+            self.state = Surfing(self)
+        elif self.state is None and not self.is_safe():
+            self.state = Evacuating(self)
+        elif type(self.state) is Evacuating and self.is_safe():
+            self.state = Surfing(self)
+        elif type(self.state) is Surfing and not self.is_safe():
+            self.state = Evacuating(self)
+
+        self.taken_path.append(self.state.step())
 
     def is_safe(self) -> bool:
         return not self.level.g.nodes[self.pos.pos()]["dangerous"]
     
-    def reserve_next_path(self):
-        for node in self.next_path:
+    def reserve_next_path(self, priorities = []):
+        for i, node in enumerate(self.next_path):
+            priority = priorities[i] if len(priorities) > i else 2
             this_r = self.reservations.get(node)
-            if this_r is not None and this_r.agent != self.id:
+            if this_r is not None and this_r.agent != self.id and this_r.priority >= priority:
                 self._log(f"WARN: Overwriting reservation ({node})")
             next_r = self.reservations.get(node.incremented_t())
-            if next_r is not None and next_r.agent != self.id:
+            if next_r is not None and next_r.agent != self.id and next_r.priority >= priority:
                 self._log(f"WARN: Overwriting reservation ({node.incremented_t()} - inc)")
-            self.reservations.reserve(Reservation(node, self.id, 2))
-            self.reservations.reserve(Reservation(node.incremented_t(), self.id, 2))
+            self.reservations.reserve(Reservation(node, self.id, priority))
+            self.reservations.reserve(Reservation(node.incremented_t(), self.id, priority))
     
     def cancel_reservations(self):
         for node in self.next_path:
@@ -70,5 +84,6 @@ class Agent:
         return True
 
     def _log(self, msg):
-        print(f"a={self.id} t={self.taken_path[-1].t}: {msg}", file=stderr)
+        s = self.state.name() if self.state is not None else ""
+        print(f"a={self.id}{s} t={self.taken_path[-1].t}: {msg}", file=stderr)
 

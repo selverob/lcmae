@@ -12,6 +12,7 @@ class Evacuating(State):
         self.agent = agent
         self.goal = None
         self.retarget()
+        self.replan()
 
     def _rra(self, x, y):
         # RRA is *reversed* so our goal is its start
@@ -41,9 +42,9 @@ class Evacuating(State):
         self.agent.reserve_next_path()
 
     def step(self) -> ReservationNode:
-        if len(self.agent.next_path) == 0:
-            self.retarget()
-            self.replan()
         if len(self.agent.next_path) == self.agent.lookahead // 2 or not self.agent.check_reservations():
             self.replan()
         return self.agent.next_path.popleft()
+
+    def name(self) -> str:
+        return "s"

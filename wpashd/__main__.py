@@ -19,7 +19,8 @@ def plan_evacuation(level, random_seed=42):
     # debugging easier
     t = 0
     deadlock_timer = 0
-    while deadlock_timer < 15:
+    #while deadlock_timer < 15:
+    while t < 100:
         print(f"Safe: {safe}", file=stderr)
         print(f"Endangered: {endangered}", file=stderr)
         deadlock_timer += 1

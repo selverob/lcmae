@@ -10,7 +10,8 @@ class WindowedAstar:
                  rra: typing.Callable[[ReservationNode, ReservationNode], int],
                  start: ReservationNode,
                  goal: ReservationNode,
-                 depth: int):
+                 depth: int,
+                 reservation_priority = 2):
         self.g = g
         self.agent = agent
         self.rra = rra
@@ -22,6 +23,7 @@ class WindowedAstar:
         self.g_costs = {start: 0.0}
         self.last_node: typing.Optional[ReservationNode] = None
         self.predecessors: typing.Dict[ReservationNode, ReservationNode] = {}
+        self.priority = reservation_priority
 
     def pathfind(self) -> bool:
         while len(self.opened) > 0:
@@ -71,4 +73,4 @@ class WindowedAstar:
 
     def _reservable_by(self, node: ReservationNode) -> bool:
         reservation = self.g.get(node)
-        return reservation is None or reservation.agent == self.agent.id
+        return reservation is None or reservation.agent == self.agent.id or reservation.priority < self.priority
