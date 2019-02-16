@@ -46,7 +46,11 @@ class Surfing(State):
         for k in self.agent.reservations.g[n.pos()].keys():
             rn = ReservationNode(k, n.t + 1)
             if self._reservable_by(rn) and self._reservable_by(rn.incremented_t()):
-                neighbors.append((rn, 1))
+                cost = 1
+                # Going back to danger is heavily penalized
+                if not self.agent.level.is_safe(rn.pos()):
+                    cost = 3
+                neighbors.append((rn, cost))
         this_node = n.incremented_t()
         this_reservable = (self._reservable_by(this_node) and self._reservable_by(this_node.incremented_t()))
         if this_reservable:

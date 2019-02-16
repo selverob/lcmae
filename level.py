@@ -55,6 +55,9 @@ class Level:
 
     def id_to_coords(self, node_id):
         return id_to_coords(self.cols, node_id)
+    
+    def is_safe(self, node_id) -> bool:
+        return not self.g.nodes[node_id]["dangerous"]
 
     def __add_danger(self):
         for n in self.scenario.danger:

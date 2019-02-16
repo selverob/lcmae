@@ -52,7 +52,7 @@ class Agent:
         self.taken_path.append(self.state.step())
 
     def is_safe(self) -> bool:
-        return not self.level.g.nodes[self.pos.pos()]["dangerous"]
+        return self.level.is_safe(self.pos.pos())
     
     def reserve_next_path(self, priorities = []):
         for i, node in enumerate(self.next_path):
