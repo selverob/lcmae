@@ -36,8 +36,8 @@ class Grid(arcade.Window):
 
     def on_draw(self):
         arcade.start_render()
-        self.walls.draw()
         self.danger_cells.draw()
+        self.walls.draw()
         if self.agents is not None:
             self.agents.draw()
 
@@ -157,7 +157,7 @@ def main():
     paths = None
     if len(argv) == 4:
         paths = parse_paths(argv[3])
-    check_paths(paths)
+        check_paths(paths)
     lines = []
     with open(map_path) as map_f:
         for _ in range(4):

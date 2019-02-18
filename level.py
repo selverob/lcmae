@@ -61,7 +61,8 @@ class Level:
 
     def __add_danger(self):
         for n in self.scenario.danger:
-            self.g.nodes[n]["dangerous"] = True
+            if n in self.g.nodes:
+                self.g.nodes[n]["dangerous"] = True
 
     def __add_frontier(self):
         self.frontier = []
