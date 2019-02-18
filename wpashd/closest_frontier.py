@@ -1,8 +1,7 @@
-from typing import Optional
+from typing import cast, Optional, Tuple
 from astar import AStar
 from level import Level
 from pqdict import pqdict
-from typing import cast
 from graph.interface import Node
 from graph.nx_graph import NxGraph, NxNode
 
@@ -16,9 +15,10 @@ class ClosestFrontierFinder(AStar):
         self.g_costs = {NxNode(node): 0.0 for node in self.level.frontier}
         self.goal = agent_pos
 
-    def get_closest_frontier(self) -> Optional[NxNode]:
+    def get_closest_frontier(self) -> Optional[Tuple[NxNode, int]]:
         if self.pathfind():
-            return cast(Optional[NxNode], self.reconstruct_path()[0])
+            path = self.reconstruct_path()
+            return (cast(NxNode, path[0]), len(path))
         else:
             return None
 

@@ -11,6 +11,8 @@ class Evacuating(State):
     def __init__(self, agent):
         self.agent = agent
         self.goal = None
+        self.distance_with_goal = 0
+        self.distance_to_goal = 0
         self.retarget()
         self.replan()
 
@@ -21,9 +23,11 @@ class Evacuating(State):
         return self.rra.distance(NxNode(x.pos()))
 
     def retarget(self):
-        self.goal = ClosestFrontierFinder(self.agent.level, NxNode(self.agent.pos.pos())).get_closest_frontier()
-        if self.goal is None:
+        cf_results = ClosestFrontierFinder(self.agent.level, NxNode(self.agent.pos.pos())).get_closest_frontier()
+        if cf_results is None:
             raise RuntimeError("No safe zone found")
+        self.goal, self.distance_to_goal = cf_results
+        self.distance_with_goal = 0
         self.rra = RRAHeuristic(self.agent.level, NxNode(self.agent.pos.pos()), NxNode(self.goal.pos()))
 
     def pathfind_to(self, goal: ReservationNode) -> typing.List[ReservationNode]:
@@ -42,8 +46,16 @@ class Evacuating(State):
         self.agent.reserve_next_path()
 
     def step(self) -> ReservationNode:
+        if self.distance_with_goal >= 2*self.distance_to_goal:
+            self.agent._log("Waiting too long for goal, retargeting")
+            old_goal = self.goal
+            self.retarget()
+            if self.goal != old_goal:
+                self.agent._log("Found new target")
+            self.replan()
         if len(self.agent.next_path) == self.agent.lookahead // 2 or not self.agent.check_reservations():
             self.replan()
+        self.distance_with_goal += 1
         return self.agent.next_path.popleft()
 
     def name(self) -> str:
