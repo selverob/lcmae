@@ -1,22 +1,22 @@
 import typing
 from collections import deque
+from pqdict import pqdict
 
 from wpashd.state import State
 from graph.reservation_graph import ReservationNode
-from pqdict import pqdict
 
 
 class Surfing(State):
     def __init__(self, agent):
         self.agent = agent
         self.replan()
-    
+
     def pathfind(self) -> typing.Optional[typing.List[ReservationNode]]:
         opened = pqdict({self.agent.pos: 0})
         closed: typing.Set[ReservationNode] = set()
         g_costs = {self.agent.pos: 0.0}
         predecessors: typing.Dict[ReservationNode, ReservationNode] = {}
-        while len(opened) > 0:
+        while opened:
             curr = opened.pop()
             closed.add(curr)
             if curr.t == self.agent.pos.t + self.agent.lookahead:
@@ -40,7 +40,7 @@ class Surfing(State):
                 else:
                     opened[n] = f_cost
         return None
-    
+
     def neighbors(self, n: ReservationNode) -> typing.List[typing.Tuple[ReservationNode, int]]:
         neighbors = []
         for k in self.agent.reservations.g[n.pos()].keys():
@@ -68,9 +68,9 @@ class Surfing(State):
     def replan(self):
         self.agent.cancel_reservations()
         self.agent.next_path = deque(self.pathfind()[1:])
-        self.agent._log(f"Next: {self.agent.next_path}")
+        self.agent.log(f"Next: {self.agent.next_path}")
         reservation_len = self.agent.lookahead // 2
-        self.agent.reserve_next_path(priorities = [2] * reservation_len + [1] * reservation_len)
+        self.agent.reserve_next_path(priorities=[2] * reservation_len + [1] * reservation_len)
 
     def step(self) -> ReservationNode:
         if len(self.agent.next_path) == self.agent.lookahead // 2 or not self.agent.check_reservations():

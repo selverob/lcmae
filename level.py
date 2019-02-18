@@ -49,13 +49,15 @@ class Level:
             self.scenario = Scenario.from_file(scenario_path)
             self.__add_danger()
             self.__add_frontier()
+            for n in self.g.nodes:
+                self.g.nodes[n]["reservations"] = set()
 
     def coords_to_id(self, row, col):
         return coords_to_id(self.cols, row, col)
 
     def id_to_coords(self, node_id):
         return id_to_coords(self.cols, node_id)
-    
+
     def is_safe(self, node_id) -> bool:
         return not self.g.nodes[node_id]["dangerous"]
 

@@ -1,7 +1,8 @@
 from typing import cast, Optional, Tuple
+from pqdict import pqdict
+
 from astar import AStar
 from level import Level
-from pqdict import pqdict
 from graph.interface import Node
 from graph.nx_graph import NxGraph, NxNode
 

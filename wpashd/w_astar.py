@@ -11,7 +11,7 @@ class WindowedAstar:
                  start: ReservationNode,
                  goal: ReservationNode,
                  depth: int,
-                 reservation_priority = 2):
+                 reservation_priority=2):
         self.g = g
         self.agent = agent
         self.rra = rra
@@ -26,7 +26,7 @@ class WindowedAstar:
         self.priority = reservation_priority
 
     def pathfind(self) -> bool:
-        while len(self.opened) > 0:
+        while self.opened:
             curr = self.opened.pop()
             self.closed.add(curr)
             if curr.t == self.start.t + self.depth:

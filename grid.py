@@ -4,7 +4,7 @@ from typing import Tuple
 import arcade
 from arcade.color import BLACK, WHITE
 import level
-from sys import argv, exit
+from sys import argv
 
 
 class Grid(arcade.Window):
