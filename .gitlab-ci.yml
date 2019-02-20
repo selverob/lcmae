@@ -1,14 +1,8 @@
 image: python:alpine
 
-stages:
-  - benchmark
-
-package-install:
-  stage: benchmark
-  script:
-    - pip intall -r requirements.txt
+before_script:
+  - pip intall -r requirements.txt
 
 benchmark:
-  stage: benchmark
   script:
     - python -m bench bench_suite/benchmarks.txt
