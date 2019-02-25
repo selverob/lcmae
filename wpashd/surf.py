@@ -16,6 +16,8 @@ class Surfing(State):
         closed: typing.Set[ReservationNode] = set()
         g_costs = {self.agent.pos: 0.0}
         predecessors: typing.Dict[ReservationNode, ReservationNode] = {}
+        backpressure = self._backpressure()
+        agent_t = self.agent.pos.t
         while opened:
             curr = opened.pop()
             closed.add(curr)
@@ -25,7 +27,10 @@ class Surfing(State):
                     path.append(predecessors[path[-1]])
                 path.reverse()
                 return path
-            for (n, cost) in self.neighbors(curr):
+            # As we go into the future, backpressure decreases, so that
+            # it gradually becomes cheaper for agents to stay put
+            bp_factor = max(1, backpressure - (curr.t - agent_t))
+            for (n, cost) in self.neighbors(curr, bp_factor):
                 if n in closed:
                     continue
                 considered_g_cost = g_costs[curr] + cost
@@ -41,34 +46,46 @@ class Surfing(State):
                     opened[n] = f_cost
         return None
 
-    def neighbors(self, n: ReservationNode) -> typing.List[typing.Tuple[ReservationNode, int]]:
+    def neighbors(self, n: ReservationNode, cost_factor: int) -> typing.List[typing.Tuple[ReservationNode, int]]:
         neighbors = []
         for k in self.agent.reservations.g[n.pos()].keys():
             rn = ReservationNode(k, n.t + 1)
             if self._reservable_by(rn) and self._reservable_by(rn.incremented_t()):
-                cost = 1
+                cost = 2
                 # Going back to danger is heavily penalized
                 if not self.agent.level.is_safe(rn.pos()):
-                    cost = 3
+                    cost = 4 * cost_factor
                 neighbors.append((rn, cost))
         this_node = n.incremented_t()
         this_reservable = (self._reservable_by(this_node) and self._reservable_by(this_node.incremented_t()))
         if this_reservable:
-            neighbors.append((this_node, 0))
+            neighbors.append((this_node, 1 * cost_factor))
         elif self.agent.pos.pos() == this_node.pos():
             # Agent can always break another agent's reservation of the node
             # they're currently on, but the action is penalized
-            neighbors.append((this_node, 2))
+            neighbors.append((this_node, 3 * cost_factor))
         return neighbors
 
     def _reservable_by(self, node: ReservationNode) -> bool:
         reservation = self.agent.reservations.get(node)
         return reservation is None or reservation.agent == self.agent.id or reservation.priority < 1
 
+    def _backpressure(self) -> int:
+        lookback = self.agent.lookahead // 2
+        if len(self.agent.taken_path) < lookback:
+            return 0
+        reserved = 0
+        t = self.agent.pos.t
+        for i in range(1, lookback + 1):
+            pos = self.agent.taken_path[-i]
+            if self.agent.reservations.get(ReservationNode(pos.pos(), t)) is not None:
+                reserved += 1
+        return reserved
+
     def replan(self):
         self.agent.cancel_reservations()
         self.agent.next_path = deque(self.pathfind()[1:])
-        self.agent.log(f"Next: {self.agent.next_path}")
+        self.agent.log(f"bp={self._backpressure()} Next: {self.agent.next_path}")
         reservation_len = self.agent.lookahead // 2
         self.agent.reserve_next_path(priorities=[2] * reservation_len + [1] * reservation_len)
 

@@ -59,4 +59,4 @@ class Evacuating(State):
         return self.agent.next_path.popleft()
 
     def name(self) -> str:
-        return "s"
+        return "e"
