@@ -1,7 +1,6 @@
 from typing import Callable, Dict, List, Set
 from pqdict import pqdict
 from graph.interface import Graph, Node
-import graph.nx_graph
 
 class AStar:
     def __init__(self,
@@ -20,10 +19,8 @@ class AStar:
         self.goal = goal
 
     def pathfind(self) -> bool:
-        while len(self.opened) > 0:
+        while self.opened:
             curr = self.opened.pop()
-            if curr == graph.nx_graph.NxNode(90):
-                breakpoint
             self.closed.add(curr)
             for n in self.g.neighbors(curr):
                 if n in self.closed:
