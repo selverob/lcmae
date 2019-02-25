@@ -2,3 +2,4 @@ bench_suite/AR0045SR.map: bench_suite/AR0045SR.scen
 bench_suite/hall.map: bench_suite/hall.scen
 bench_suite/coop.map: bench_suite/coop1.scen bench_suite/coop2.scen
 bench_suite/sh.map: bench_suite/sh.scen
+bench_suite/sh_tight.map: bench_suite/sh.scen

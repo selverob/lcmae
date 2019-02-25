@@ -1,3 +1,4 @@
+from pathlib import Path
 from sys import argv
 from time import process_time_ns
 from typing import Dict, List, Tuple
@@ -6,6 +7,8 @@ import numpy as np
 from wpashd import plan_evacuation
 from level import Level
 
+def bench_name(map_file, scen_file) -> str:
+    return f"{Path(map_file).name}-{Path(scen_file).name}"
 
 def safety_times(level: Level, paths: List[List[int]]) -> List[int]:
     times = []
@@ -22,10 +25,17 @@ def percentiles(times: List[int]) -> Dict[str, float]:
         res[str(p)] = np.percentile(times, p)
     return res
 
+def print_paths(filename, paths):
+    with open(filename, "w") as f:
+        for path in paths:
+            num_strings = ["{:02d}".format(n) for n in path]
+            print(*num_strings, file=f)
+
 def benchmark(map_file, scen_file) -> Dict[str, float]:
     lvl = Level(map_file, scen_file)
     start = process_time_ns()
     paths = plan_evacuation(lvl, debug=False)
+    print_paths(f"bench_solutions/{bench_name(map_file, scen_file)}", paths)
     stop = process_time_ns()
     st = safety_times(lvl, paths)
     result = percentiles(st)
@@ -52,7 +62,7 @@ def main():
     benchmarks = []
     with open(argv[1]) as f:
         benchmarks = parse_benchfile(f)
-    results = {t[1].split("/")[-1]: benchmark(t[0], t[1]) for t in benchmarks}
+    results = {bench_name(t[0], t[1]): benchmark(t[0], t[1]) for t in benchmarks}
     for scen in results:
         print(f"===============\n{scen}")
         for k in results[scen]:
