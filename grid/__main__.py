@@ -136,7 +136,7 @@ def parse_paths(path: str):
         if lines[-1] == [""]:
             lines = lines[:-1]
         for line in lines:
-            result.append(list(map(lambda s: int(s), line.strip().split(" "))))
+            result.append(list(map(int, line.strip().split(" "))))
     return result
 
 def check_paths(paths):
