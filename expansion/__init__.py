@@ -39,9 +39,9 @@ def expand(lvl: Level, time: int) -> Tuple[nx.DiGraph, List[Tuple[Dict[int, int]
     source = adder.add("src")
     sink = adder.add("sink")
     inputs = adder.node_clones(lvl.g, "0i")
-    final_outputs = {n: adder.add(f"{n}-fo") for n in lvl.g.node if lvl.is_safe(n)}
-    for fo in final_outputs:
-        exp_g.add_edge(final_outputs[fo], sink, capacity=1)
+    #final_outputs = {n: adder.add(f"{n}-fo") for n in lvl.g.node if lvl.is_safe(n)}
+    #for fo in final_outputs:
+    #    exp_g.add_edge(final_outputs[fo], sink, capacity=1)
     node_id_records = []
     outputs: Dict[int, int] = {}
     for agent_pos in lvl.scenario.agents:
@@ -50,9 +50,6 @@ def expand(lvl: Level, time: int) -> Tuple[nx.DiGraph, List[Tuple[Dict[int, int]
         outputs = adder.node_clones(lvl.g, f"{t}o")
         for k in inputs:
             exp_g.add_edge(inputs[k], outputs[k], capacity=1)
-        for k in outputs:
-            if lvl.is_safe(k):
-                exp_g.add_edge(outputs[k], final_outputs[k], capacity=1)
         node_id_records.append((inputs, outputs))
         if t < time - 1:
             inputs = adder.node_clones(lvl.g, f"{t+1}i")
@@ -61,6 +58,10 @@ def expand(lvl: Level, time: int) -> Tuple[nx.DiGraph, List[Tuple[Dict[int, int]
             for edge in lvl.g.edges:
                 exp_g.add_edge(outputs[edge[0]], inputs[edge[1]], capacity=1)
                 exp_g.add_edge(outputs[edge[1]], inputs[edge[0]], capacity=1)
+        else:
+            for k in outputs:
+                if lvl.is_safe(k):
+                    exp_g.add_edge(outputs[k], sink, capacity=1)
     return (exp_g, node_id_records)
 
 def follow_path(start: int, flow_dict: Dict[int, Dict[int, int]], info: Dict[int, NodeInfo]) -> List[int]:
@@ -123,7 +124,7 @@ def plan_evacuation(lvl: Level) -> List[List[int]]:
         else:
             highest_wrong = t
             t += t // 2
-        
+
     while True:
         print("Range:", highest_wrong, best_sol.t, file=stderr)
         t = highest_wrong + (best_sol.t - highest_wrong) // 2
