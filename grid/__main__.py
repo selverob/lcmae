@@ -1,9 +1,7 @@
 #! /usr/bin/env python3
 
 from sys import argv
-from typing import Tuple
 import arcade
-from arcade.color import BLACK, WHITE
 from level import Level
 from grid.grid import Grid
 

@@ -1,4 +1,3 @@
-from sys import argv
 from typing import Tuple
 import arcade
 from arcade.color import BLACK, WHITE
@@ -44,7 +43,7 @@ class Grid(arcade.Window):
             self.path_idx += 1
             self.__update_agents()
 
-    def on_mouse_press(self, x: float,  y: float, button: int, modifiers: int):
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         self.running = True
         if button == 1:
             self.__update_drag_coords(x, y)
