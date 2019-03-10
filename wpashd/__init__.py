@@ -2,13 +2,15 @@ import random
 from typing import List
 
 from graph.reservation_graph import ReservationGraph, Reservation, ReservationNode
-from wpashd.agent import Agent
 from level import Level
+from .agent import Agent
+from .agent_factory import AgentFactory
 
 def plan_evacuation(level: Level, random_seed=42, debug=True) -> List[List[int]]:
     random.seed(random_seed)
     reservations = ReservationGraph(level.g)
-    agents = [Agent(i, level, reservations, debug=debug) for i in range(len(level.scenario.agents))]
+    factory = AgentFactory(level, reservations, debug=debug)
+    agents = [factory.intelligent_agent() for i in range(len(level.scenario.agents))]
     for agent in agents:
         for i in range(agent.lookahead):
             n = agent.pos.incremented_t(i)

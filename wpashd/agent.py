@@ -16,18 +16,18 @@ import typing
 
 from graph.reservation_graph import ReservationGraph, ReservationNode, Reservation
 from level import Level
-from wpashd.evacuation import Evacuating
 from wpashd.state import State
 from wpashd.surf import Surfing
 
 class Agent:
-    def __init__(self, agent_id: int, level: Level, reservations: ReservationGraph, debug=True):
+    def __init__(self, agent_id: int, level: Level, reservations: ReservationGraph, evacuation_class, debug=True):
         self.id = agent_id
         self.lookahead = 10
         self.level = level
         self.next_path: typing.Deque[ReservationNode] = deque()
         self.taken_path = [ReservationNode(level.scenario.agents[agent_id], 0)]
         self.reservations = reservations
+        self.evac_class = evacuation_class
         self.debug = debug
         # Initialized in step()
         self.state: typing.Optional[State] = None
@@ -42,11 +42,11 @@ class Agent:
         if self.state is None and self.is_safe():
             self.state = Surfing(self)
         elif self.state is None and not self.is_safe():
-            self.state = Evacuating(self)
-        elif isinstance(self.state, Evacuating) and self.is_safe():
+            self.state = self.evac_class(self)
+        elif isinstance(self.state, self.evac_class) and self.is_safe():
             self.state = Surfing(self)
         elif isinstance(self.state, Surfing) and not self.is_safe():
-            self.state = Evacuating(self)
+            self.state = self.evac_class(self)
 
         self.taken_path.append(self.state.step())
 

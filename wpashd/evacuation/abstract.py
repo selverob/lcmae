@@ -1,13 +1,13 @@
 import typing
+from abc import ABC, abstractmethod
 from collections import deque
 from graph.nx_graph import NxNode
 from graph.reservation_graph import ReservationNode
-from wpashd.closest_frontier import ClosestFrontierFinder
 from wpashd.rra import RRAHeuristic
 from wpashd.state import State
 from wpashd.w_astar import WindowedAstar
 
-class Evacuating(State):
+class Evacuating(State, ABC):
     def __init__(self, agent):
         self.agent = agent
         self.goal = None
@@ -22,15 +22,15 @@ class Evacuating(State):
             raise RuntimeError("Trying to get RRA* heuristic distance to a node different from the goal")
         return self.rra.distance(NxNode(x.pos()))
 
+    @abstractmethod
+    def find_goal(self) -> typing.Tuple[NxNode, int]:
+        raise NotImplementedError()
+
     def retarget(self):
-        cf_results = ClosestFrontierFinder(self.agent.level, NxNode(self.agent.pos.pos())).get_closest_frontier()
-        if cf_results is None:
-            raise RuntimeError("No safe zone found")
-        self.goal, self.distance_to_goal = cf_results
-        self.distance_with_goal = 0
+        self.goal, self.distance_to_goal = self.find_goal()
         self.rra = RRAHeuristic(self.agent.level, NxNode(self.agent.pos.pos()), NxNode(self.goal.pos()))
 
-    def pathfind_to(self, goal: ReservationNode) -> typing.List[ReservationNode]:
+    def pathfind(self) -> typing.List[ReservationNode]:
         search = WindowedAstar(self.agent.reservations, self.agent, self._rra, self.agent.pos, self.goal, self.agent.lookahead)
         if not search.pathfind():
             # closest_frontier finder should either have found a path to safety
@@ -41,18 +41,11 @@ class Evacuating(State):
 
     def replan(self):
         self.agent.cancel_reservations()
-        self.agent.next_path = deque(self.pathfind_to(self.goal)[1:])
+        self.agent.next_path = deque(self.pathfind()[1:])
         self.agent.log(f"Next: {self.agent.next_path}")
         self.agent.reserve_next_path()
 
     def step(self) -> ReservationNode:
-        if self.distance_with_goal >= 2*self.distance_to_goal:
-            self.agent.log("Waiting too long for goal, retargeting")
-            old_goal = self.goal
-            self.retarget()
-            if self.goal != old_goal:
-                self.agent.log("Found new target")
-            self.replan()
         if len(self.agent.next_path) == self.agent.lookahead // 2 or not self.agent.check_reservations():
             self.replan()
         self.distance_with_goal += 1
