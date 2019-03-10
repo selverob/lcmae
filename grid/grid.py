@@ -16,32 +16,39 @@ class Grid(arcade.Window):
         self.level_map = level_map
         self.danger = set(scenario.danger_coords(self.grid_size[1]))
         self.screen_size = (self.grid_size[1] * (cell_size + border) + border,
-                            self.grid_size[0] * (cell_size + border) + border)
+                            self.grid_size[0] * (cell_size + border) + border + 15)
         self.running = False
+        self.current_drag_coords = None
         self.__update_walls()
-        self.__update_danger()
+        self.danger_cells = arcade.ShapeElementList()
+        self.__add_danger(*self.danger)
         if paths is not None:
             self.paths = paths
             self.path_idx = 0
             self.__update_agents()
         else:
             self.agents = None
-        self.current_drag_coords = None
+        self.set_status("Left click draws danger or starts sim. Middle click prints coord. Right click prints all danger.")
         super().__init__(self.screen_size[0], self.screen_size[1])
         arcade.set_background_color(WHITE)
-        self.set_update_rate(1/3)
+        self.set_update_rate(1/5)
 
     def on_draw(self):
+        if not self.dirty:
+            return
         arcade.start_render()
         self.danger_cells.draw()
         self.walls.draw()
         if self.agents is not None:
             self.agents.draw()
+        arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=10)
+        self.dirty = False
 
     def on_update(self, delta_time: float):
         if self.agents is not None and self.running:
             self.path_idx += 1
             self.__update_agents()
+            self.dirty = True
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         self.running = True
@@ -54,12 +61,14 @@ class Grid(arcade.Window):
         elif button == 2:
             print(level.coords_to_id(
                 self.grid_size[1], *self.__coords_for_pos(x, y)))
+        self.dirty = True
 
     def on_mouse_drag(self, x: float, y: float, dx: float, dy: float,
                       button: int, modifiers: int):
         if button != 1:
             return
         self.__update_drag_coords(x, y)
+        self.dirty = True
 
     def __update_drag_coords(self, x, y):
         row, col = self.__coords_for_pos(x, y)
@@ -71,7 +80,7 @@ class Grid(arcade.Window):
                     is_valid_col and
                     self.level_map[row][col] != "@"):
                 self.danger.add(self.current_drag_coords)
-                self.__update_danger()
+                self.__add_danger(self.current_drag_coords)
 
     def __update_walls(self):
         walls = arcade.ShapeElementList()
@@ -87,17 +96,15 @@ class Grid(arcade.Window):
                     walls.append(shape)
         self.walls = walls
 
-    def __update_danger(self):
-        danger_cells = arcade.ShapeElementList()
-        for coords in self.danger:
+    def __add_danger(self, *danger_coords):
+        for coords in danger_coords:
             pos = self.__pos_for_coords(coords[0], coords[1])
             shape = arcade.create_rectangle_filled(pos[0],
                                                    pos[1],
                                                    self.cell_size,
                                                    self.cell_size,
                                                    arcade.color.BABY_PINK)
-            danger_cells.append(shape)
-        self.danger_cells = danger_cells
+            self.danger_cells.append(shape)
 
     def __update_agents(self):
         node_ids = [path[self.path_idx] if self.path_idx < len(path) else path[-1] for path in self.paths]
@@ -116,7 +123,7 @@ class Grid(arcade.Window):
     def __pos_for_coords(self, row, col):
         cell_with_border = (self.cell_size + self.border)
         x = col * cell_with_border + self.border + self.cell_size/2
-        y = self.screen_size[1] - (
+        y = self.screen_size[1] - 15 - (
             row * cell_with_border + self.border + self.cell_size/2)
         return (x, y)
 
@@ -124,3 +131,7 @@ class Grid(arcade.Window):
         row = self.grid_size[0] - y // (self.cell_size + self.border) - 1
         col = x // (self.cell_size + self.border)
         return (row, col)
+
+    def set_status(self, text: str):
+        self.status_text = text
+        self.dirty = True

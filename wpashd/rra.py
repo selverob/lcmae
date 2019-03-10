@@ -1,7 +1,6 @@
 from astar import AStar
 from level import Level
 from manhattan import ManhattanDistanceHeuristic
-from graph.interface import Node
 from graph.nx_graph import NxGraph, NxNode
 
 
