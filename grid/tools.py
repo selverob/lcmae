@@ -78,8 +78,6 @@ class Danger(DraggableTool):
         if coords in self.grid.walls:
             return
         self.grid.danger[coords] = self.filled_rectangle_at(row, col, arcade.color.BABY_PINK)
-        if coords in self.grid.agents:
-            del self.grid.agents[coords]
 
     def remove_object_at_coords(self, row: int, col: int):
         if (row, col) in self.grid.danger:
@@ -91,7 +89,7 @@ class Agent(DraggableTool):
 
     def add_object_at_coords(self, row: int, col: int):
         coords = (row, col)
-        if coords not in self.grid.walls and coords not in self.grid.danger:
+        if coords not in self.grid.walls:
             self.grid.agents[coords] = self.filled_rectangle_at(row, col, type(self).color)
 
     def remove_object_at_coords(self, row: int, col: int):

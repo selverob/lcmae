@@ -1,11 +1,12 @@
 from typing import Tuple
 import arcade
 import grid.tools as tools
+from level import Scenario
 from .shape_collection import ShapeCollection
 
 
 class Grid(arcade.Window):
-    def __init__(self, level_map, scenario, paths=None, cell_size=5, border=1):
+    def __init__(self, level_map, scenario: Scenario, paths=None, cell_size=5, border=1):
         self.grid_size = (len(level_map), len(level_map[0]))
         self.cell_size = cell_size
         self.border = border
@@ -15,11 +16,14 @@ class Grid(arcade.Window):
         self.level_map = level_map
         self.running = False
 
-        self.tool = tools.Wall(self)
+        self.tool: tools.Tool = tools.Wall(self)
 
         self.walls = ShapeCollection()
         self.danger = ShapeCollection()
         self.agents = ShapeCollection()
+
+        self._initialize_walls()
+        self._initialize_danger(scenario)
 
         # if paths is not None:
         #     self.paths = paths
@@ -27,7 +31,7 @@ class Grid(arcade.Window):
         #     self.__update_agents()
         # else:
         #     self.agents = None
-        self.set_status("Drawing walls")
+        self.status_text = "Drawing walls"
         arcade.set_background_color(arcade.color.WHITE)
         self.set_update_rate(1 / 5)
 
@@ -38,7 +42,7 @@ class Grid(arcade.Window):
         self.walls.draw()
         self.danger.draw()
         self.agents.draw()
-        arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=10)
+        arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=12)
 
     def on_update(self, delta_time: float):
         pass
@@ -58,14 +62,19 @@ class Grid(arcade.Window):
         char = chr(symbol)
         if char == "w":
             self.tool = tools.Wall(self)
+            self.status_text = "Drawing walls"
         elif char == "d":
             self.tool = tools.Danger(self)
+            self.status_text = "Drawing danger zone"
         elif char == "r":
             self.tool = tools.RetargetingAgent(self)
+            self.status_text = "Drawing retargeting agents"
         elif char == "f":
             self.tool = tools.FrontierAgent(self)
+            self.status_text = "Drawing frontier agents"
         elif char == "s":
             self.tool = tools.StaticAgent(self)
+            self.status_text = "Drawing static agents"
         elif char == "p":
             # TODO
             pass
@@ -74,9 +83,9 @@ class Grid(arcade.Window):
 
     def pos_for_coords(self, row, col):
         cell_with_border = (self.cell_size + self.border)
-        x = col * cell_with_border + self.border + self.cell_size/2
+        x = col * cell_with_border + self.border + self.cell_size / 2
         y = self.screen_size[1] - 15 - (
-            row * cell_with_border + self.border + self.cell_size/2)
+            row * cell_with_border + self.border + self.cell_size / 2)
         return (x, y)
 
     def coords_for_pos(self, x: float, y: float) -> Tuple[int, int]:
@@ -84,6 +93,15 @@ class Grid(arcade.Window):
         col = x // (self.cell_size + self.border)
         return (row, col)
 
-    def set_status(self, text: str):
-        self.status_text = text
-        self.dirty = True
+    def _initialize_walls(self):
+        wall_tool = tools.Wall(self)
+        for row, line in enumerate(self.level_map):
+            for col, char in enumerate(line):
+                if char == "@":
+                    print(row, col)
+                    wall_tool.add_object_at_coords(row, col)
+
+    def _initialize_danger(self, scenario: Scenario):
+        danger_tool = tools.Danger(self)
+        for coords in scenario.danger_coords(len(self.level_map[0])):
+            danger_tool.add_object_at_coords(*coords)
