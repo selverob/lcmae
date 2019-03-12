@@ -1,3 +1,6 @@
+import re
+from collections import namedtuple
+from enum import Enum
 from typing import List, Tuple
 import networkx as nx
 
@@ -19,6 +22,11 @@ class NoPathFound(Exception):
 
 
 class Scenario:
+    agent_re = re.compile("(\\d+)(.)(\\d+)?")
+    AgentType = Enum("AgentType", "RETARGETING CLOSEST_FRONTIER STATIC PANICKED")
+    Agent = namedtuple("Agent", ["type", "origin", "goal"])
+    _typeMap = {"r": AgentType.RETARGETING, "f": AgentType.CLOSEST_FRONTIER, "s": AgentType.STATIC, "p": AgentType.PANICKED}
+
     @staticmethod
     def from_file(path: str):
         with open(path, "r") as f:
@@ -29,8 +37,13 @@ class Scenario:
         self.danger = list(
             map(int, danger_line.split(" "))) if danger_line != "" else []
         agents_line = f.readline().strip()
-        self.agents = list(
-            map(int, agents_line.split(" "))) if agents_line != "" else []
+        self.agents = []
+        for agent_desc in agents_line.split(" "):
+            parsed_desc = Scenario.agent_re.fullmatch(agent_desc)
+            self.agents.append(Scenario.Agent(
+                Scenario._typeMap[parsed_desc[2]],
+                int(parsed_desc[1]),
+                int(parsed_desc[3]) if parsed_desc[3] is not None else None))
 
     def danger_coords(self, map_cols: int) -> List[Tuple[int, int]]:
         return list(
@@ -38,7 +51,7 @@ class Scenario:
 
     def agents_coords(self, map_cols: int) -> List[Tuple[int, int]]:
         return list(
-            map(lambda coord: id_to_coords(map_cols, coord), self.agents))
+            map(lambda agent: id_to_coords(map_cols, agent.origin), self.agents))
 
 
 class Level:

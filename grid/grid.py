@@ -78,6 +78,8 @@ class Grid(arcade.Window):
         elif char == "p":
             # TODO
             pass
+        elif char == ' ':
+            self.running = True
         else:
             print(symbol, char)
 
@@ -98,7 +100,6 @@ class Grid(arcade.Window):
         for row, line in enumerate(self.level_map):
             for col, char in enumerate(line):
                 if char == "@":
-                    print(row, col)
                     wall_tool.add_object_at_coords(row, col)
 
     def _initialize_danger(self, scenario: Scenario):

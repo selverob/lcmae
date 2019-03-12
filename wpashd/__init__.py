@@ -3,14 +3,14 @@ from typing import List
 
 from graph.reservation_graph import ReservationGraph, Reservation, ReservationNode
 from level import Level
-from .agent import Agent
 from .agent_factory import AgentFactory
+
 
 def plan_evacuation(level: Level, random_seed=42, debug=True) -> List[List[int]]:
     random.seed(random_seed)
     reservations = ReservationGraph(level.g)
     factory = AgentFactory(level, reservations, debug=debug)
-    agents = [factory.intelligent_agent() for i in range(len(level.scenario.agents))]
+    agents = [factory.from_scenario(agent) for agent in level.scenario.agents]
     for agent in agents:
         for i in range(agent.lookahead):
             n = agent.pos.incremented_t(i)

@@ -25,7 +25,7 @@ class Agent:
         self.lookahead = 10
         self.level = level
         self.next_path: typing.Deque[ReservationNode] = deque()
-        self.taken_path = [ReservationNode(level.scenario.agents[agent_id], 0)]
+        self.taken_path = [ReservationNode(level.scenario.agents[agent_id].origin, 0)]
         self.reservations = reservations
         self.evac_class = evacuation_class
         self.debug = debug
