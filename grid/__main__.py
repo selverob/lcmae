@@ -29,8 +29,10 @@ def check_paths(paths, level):
         if len(s) != len(paths):
             print(f"Collision at time {t}")
     for agent, p in enumerate(paths):
+        if level.scenario.agents[agent].origin != p[0]:
+            print("Agent starts at a point different from the scenario")
         for i in range(1, len(p)):
-            if p[i-1] not in level.g[p[i]] and p[i - 1] != p[i]:
+            if p[i - 1] not in level.g[p[i]] and p[i - 1] != p[i]:
                 print(f"Non-adjacent movement of agent {agent} at time {i}")
 
 

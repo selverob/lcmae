@@ -109,5 +109,5 @@ class StaticAgent(Agent):
     color = arcade.color.ORANGE
 
 
-class DumbAgent(Agent):
+class PanickedAgent(Agent):
     color = arcade.color.RED

@@ -1,7 +1,7 @@
-from typing import Tuple
+from typing import Iterable, Tuple
 import arcade
 import grid.tools as tools
-from level import Scenario
+from level import Scenario, id_to_coords
 from .shape_collection import ShapeCollection
 
 
@@ -14,6 +14,7 @@ class Grid(arcade.Window):
                             self.grid_size[0] * (cell_size + border) + border + 15)
         super().__init__(self.screen_size[0], self.screen_size[1])
         self.level_map = level_map
+        self.scenario = scenario
         self.running = False
 
         self.tool: tools.Tool = tools.Wall(self)
@@ -23,14 +24,15 @@ class Grid(arcade.Window):
         self.agents = ShapeCollection()
 
         self._initialize_walls()
-        self._initialize_danger(scenario)
+        self._initialize_danger()
+        self._initialize_agents()
 
-        # if paths is not None:
-        #     self.paths = paths
-        #     self.path_idx = 0
-        #     self.__update_agents()
-        # else:
-        #     self.agents = None
+        if paths is not None:
+            self.paths = paths
+            self.current_step = 0
+        else:
+            self.paths = None
+
         self.status_text = "Drawing walls"
         arcade.set_background_color(arcade.color.WHITE)
         self.set_update_rate(1 / 5)
@@ -45,18 +47,20 @@ class Grid(arcade.Window):
         arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=12)
 
     def on_update(self, delta_time: float):
-        pass
-        # if self.agents is not None and self.running:
-        #     self.path_idx += 1
-        #     self.__update_agents()
-        #     self.dirty = True
+        if self.paths is not None and self.running:
+            if self.current_step == len(self.paths[0]):
+                self.running = False
+                return
+            self.step()
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
-        self.tool.on_mouse_press(x, y, button, modifiers)
+        if not self.running:
+            self.tool.on_mouse_press(x, y, button, modifiers)
 
     def on_mouse_drag(self, x: float, y: float, dx: float, dy: float,
                       button: int, modifiers: int):
-        self.tool.on_mouse_drag(x, y, dx, dy, button, modifiers)
+        if not self.running:
+            self.tool.on_mouse_drag(x, y, dx, dy, button, modifiers)
 
     def on_key_press(self, symbol: int, modifiers: int):
         char = chr(symbol)
@@ -76,12 +80,11 @@ class Grid(arcade.Window):
             self.tool = tools.StaticAgent(self)
             self.status_text = "Drawing static agents"
         elif char == "p":
-            # TODO
-            pass
+            self.tool = tools.PanickedAgent(self)
+            self.status_text = "Drawing panicked agents"
         elif char == ' ':
-            self.running = True
-        else:
-            print(symbol, char)
+            if self.paths is not None:
+                self.running = not self.running
 
     def pos_for_coords(self, row, col):
         cell_with_border = (self.cell_size + self.border)
@@ -94,6 +97,11 @@ class Grid(arcade.Window):
         row = self.grid_size[0] - y // (self.cell_size + self.border) - 1
         col = x // (self.cell_size + self.border)
         return (row, col)
+    
+    def step(self):
+        positions = map(lambda p: p[self.current_step], self.paths)
+        self._draw_agents_at_positions(positions)
+        self.current_step += 1
 
     def _initialize_walls(self):
         wall_tool = tools.Wall(self)
@@ -102,7 +110,28 @@ class Grid(arcade.Window):
                 if char == "@":
                     wall_tool.add_object_at_coords(row, col)
 
-    def _initialize_danger(self, scenario: Scenario):
+    def _initialize_danger(self):
         danger_tool = tools.Danger(self)
-        for coords in scenario.danger_coords(len(self.level_map[0])):
+        for coords in self.scenario.danger_coords(len(self.level_map[0])):
             danger_tool.add_object_at_coords(*coords)
+
+    def _initialize_agents(self):
+        self._draw_agents_at_positions(map(lambda a: a.origin, self.scenario.agents))
+
+    def _draw_agents_at_positions(self, positions: Iterable[int]):
+        self.agents = ShapeCollection()
+        r_tool = tools.RetargetingAgent(self)
+        f_tool = tools.FrontierAgent(self)
+        s_tool = tools.StaticAgent(self)
+        p_tool = tools.PanickedAgent(self)
+        for position, agent in zip(positions, self.scenario.agents):
+            t = agent.type
+            coords = id_to_coords(self.grid_size[1], position)
+            used_tool: tools.Agent = r_tool
+            if t == Scenario.AgentType.CLOSEST_FRONTIER:
+                used_tool = f_tool
+            elif t == Scenario.AgentType.STATIC:
+                used_tool = s_tool
+            elif t == Scenario.AgentType.PANICKED:
+                used_tool = p_tool
+            used_tool.add_object_at_coords(*coords)

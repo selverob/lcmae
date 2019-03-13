@@ -34,4 +34,5 @@ class ShapeCollection():
         self._dirty = False
 
     def draw(self):
-        self.shape_list.draw()
+        if self.shapes:
+            self.shape_list.draw()
