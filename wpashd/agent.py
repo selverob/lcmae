@@ -19,6 +19,7 @@ from level import Level
 from wpashd.state import State
 from wpashd.surf import Surfing
 
+
 class Agent:
     def __init__(self, agent_id: int, level: Level, reservations: ReservationGraph, evacuation_class, debug=True):
         self.id = agent_id
@@ -43,7 +44,7 @@ class Agent:
             self.state = Surfing(self)
         elif self.state is None and not self.is_safe():
             self.state = self.evac_class(self)
-        elif isinstance(self.state, self.evac_class) and self.is_safe():
+        elif not isinstance(self.state, Surfing) and self.is_safe():
             self.state = Surfing(self)
         elif isinstance(self.state, Surfing) and not self.is_safe():
             self.state = self.evac_class(self)

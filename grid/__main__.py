@@ -16,13 +16,14 @@ def parse_paths(path: str):
             result.append(list(map(int, line.strip().split(" "))))
     return result
 
+
 def check_paths(paths, level):
-    l = len(paths[0])
+    path_len = len(paths[0])
     for p in paths:
-        if len(p) != l:
+        if len(p) != path_len:
             print("Not all paths have equal sizes")
             exit(1)
-    for t in range(l):
+    for t in range(path_len):
         s = set()
         for p in paths:
             s.add(p[t])

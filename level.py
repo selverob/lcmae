@@ -26,24 +26,29 @@ class Scenario:
     AgentType = Enum("AgentType", "RETARGETING CLOSEST_FRONTIER STATIC PANICKED")
     Agent = namedtuple("Agent", ["type", "origin", "goal"])
     _typeMap = {"r": AgentType.RETARGETING, "f": AgentType.CLOSEST_FRONTIER, "s": AgentType.STATIC, "p": AgentType.PANICKED}
+    _typeChars = {typ: code for code, typ in _typeMap.items()}
 
     @staticmethod
     def from_file(path: str):
         with open(path, "r") as f:
-            return Scenario(f)
+            s = Scenario()
+            danger_line = f.readline().strip()
+            s.danger = list(
+                map(int, danger_line.split(" "))) if danger_line != "" else []
+            agents_line = f.readline().strip().split(" ")
+            if agents_line == [""]:
+                return s
+            for agent_desc in agents_line:
+                parsed_desc = Scenario.agent_re.fullmatch(agent_desc)
+                s.agents.append(Scenario.Agent(
+                    Scenario._typeMap[parsed_desc[2]],
+                    int(parsed_desc[1]),
+                    int(parsed_desc[3]) if parsed_desc[3] is not None else None))
+            return s
 
-    def __init__(self, f):
-        danger_line = f.readline().strip()
-        self.danger = list(
-            map(int, danger_line.split(" "))) if danger_line != "" else []
-        agents_line = f.readline().strip()
-        self.agents = []
-        for agent_desc in agents_line.split(" "):
-            parsed_desc = Scenario.agent_re.fullmatch(agent_desc)
-            self.agents.append(Scenario.Agent(
-                Scenario._typeMap[parsed_desc[2]],
-                int(parsed_desc[1]),
-                int(parsed_desc[3]) if parsed_desc[3] is not None else None))
+    def __init__(self, danger=[], agents=[]):
+        self.agents: List[Scenario.Agent] = agents
+        self.danger: List[int] = danger
 
     def danger_coords(self, map_cols: int) -> List[Tuple[int, int]]:
         return list(
@@ -52,6 +57,16 @@ class Scenario:
     def agents_coords(self, map_cols: int) -> List[Tuple[int, int]]:
         return list(
             map(lambda agent: id_to_coords(map_cols, agent.origin), self.agents))
+
+    def agent_str(self, agent: Agent):
+        res = f"{agent.origin}{Scenario._typeChars[agent.type]}"
+        if agent.goal is not None:
+            res += str(agent.goal)
+        return res
+
+    def write(self, f):
+        print(*self.danger, file=f)
+        print(*map(lambda a: self.agent_str(a), self.agents), file=f)
 
 
 class Level:
@@ -100,16 +115,16 @@ class Level:
                 field_id = coords_to_id(self.cols, row, col)
                 self.g.add_node(field_id)
                 self.g.nodes[field_id]["dangerous"] = False
-                if row != 0 and grid[row-1][col] != "@":
+                if row != 0 and grid[row - 1][col] != "@":
                     self.g.add_edge(
-                        field_id, coords_to_id(self.cols, row-1, col))
-                if row != self.rows - 1 and grid[row+1][col] != "@":
+                        field_id, coords_to_id(self.cols, row - 1, col))
+                if row != self.rows - 1 and grid[row + 1][col] != "@":
                     self.g.add_edge(
-                        field_id, coords_to_id(self.cols, row+1, col))
+                        field_id, coords_to_id(self.cols, row + 1, col))
                 if col != 0 and grid[row][col - 1] != "@":
                     self.g.add_edge(
                         field_id, coords_to_id(self.cols, row, col - 1))
-                if col != self.cols - 1 and grid[row][col+1] != "@":
+                if col != self.cols - 1 and grid[row][col + 1] != "@":
                     self.g.add_edge(
                         field_id, coords_to_id(self.cols, row, col + 1))
         return self.g

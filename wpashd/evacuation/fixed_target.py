@@ -5,10 +5,11 @@ from graph.nx_graph import NxGraph, NxNode
 from wpashd.agent import Agent
 from .abstract import Evacuating
 
+
 class FixedTargetEvacuation(Evacuating):
     def __init__(self, agent: Agent, target: NxNode):
+        self.heuristic = ManhattanDistanceHeuristic(agent.level)
         self.target_node = target
-        self.heuristic = ManhattanDistanceHeuristic(self.agent.level)
         super().__init__(agent)
 
     def find_goal(self) -> Tuple[NxNode, int]:

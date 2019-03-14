@@ -1,7 +1,7 @@
 from typing import Iterable, Tuple
 import arcade
 import grid.tools as tools
-from level import Scenario, id_to_coords
+from level import Scenario, coords_to_id, id_to_coords
 from .shape_collection import ShapeCollection
 
 
@@ -82,6 +82,8 @@ class Grid(arcade.Window):
         elif char == "p":
             self.tool = tools.PanickedAgent(self)
             self.status_text = "Drawing panicked agents"
+        elif char == "m":
+            self.write_out()
         elif char == ' ':
             if self.paths is not None:
                 self.running = not self.running
@@ -97,11 +99,19 @@ class Grid(arcade.Window):
         row = self.grid_size[0] - y // (self.cell_size + self.border) - 1
         col = x // (self.cell_size + self.border)
         return (row, col)
-    
+
     def step(self):
         positions = map(lambda p: p[self.current_step], self.paths)
         self._draw_agents_at_positions(positions)
         self.current_step += 1
+
+    def make_scenario(self) -> Scenario:
+        s = Scenario([], [])
+        for row, col in self.danger.shapes:
+            s.danger.append(coords_to_id(self.grid_size[1], row, col))
+        for row, col in self.agents.shapes:
+            s.agents.append(self.agents.get_meta((row, col)))
+        return s
 
     def _initialize_walls(self):
         wall_tool = tools.Wall(self)
@@ -127,11 +137,31 @@ class Grid(arcade.Window):
         for position, agent in zip(positions, self.scenario.agents):
             t = agent.type
             coords = id_to_coords(self.grid_size[1], position)
-            used_tool: tools.Agent = r_tool
-            if t == Scenario.AgentType.CLOSEST_FRONTIER:
-                used_tool = f_tool
-            elif t == Scenario.AgentType.STATIC:
-                used_tool = s_tool
+            if t == Scenario.AgentType.RETARGETING:
+                r_tool.add_object_at_coords(*coords)
+            elif t == Scenario.AgentType.CLOSEST_FRONTIER:
+                f_tool.add_object_at_coords(*coords)
             elif t == Scenario.AgentType.PANICKED:
-                used_tool = p_tool
-            used_tool.add_object_at_coords(*coords)
+                p_tool.add_object_at_coords(*coords)
+            elif t == Scenario.AgentType.STATIC:
+                s_tool.add_agent(coords, id_to_coords(self.grid_size[1], agent.goal))
+
+    def write_out(self):
+        with open("out.map", "w") as f:
+            self.write_map(f)
+        with open("out.scen", "w") as f:
+            self.make_scenario().write(f)
+
+    def write_map(self, f):
+        print("type octile", file=f)
+        print(f"height {self.grid_size[0]}", file=f)
+        print(f"width {self.grid_size[1]}", file=f)
+        print("map", file=f)
+        for row in range(self.grid_size[0]):
+            row_str = ""
+            for col in range(self.grid_size[1]):
+                if (row, col) in self.walls:
+                    row_str += "@"
+                else:
+                    row_str += "."
+            print(row_str, file=f)

@@ -4,6 +4,7 @@ from graph.reservation_graph import ReservationGraph
 from graph.nx_graph import NxNode
 from .agent import Agent
 
+
 class AgentFactory():
     def __init__(self, level: Level, reservations: ReservationGraph, debug=True):
         self.level = level
@@ -18,7 +19,7 @@ class AgentFactory():
         return self._agent_with_evac_class(evac.ClosestFrontierEvacuation)
 
     def static_target_agent(self, target: int) -> Agent:
-        return self._agent_with_evac_class(lambda target: evac.FixedTargetEvacuation(NxNode(target)))
+        return self._agent_with_evac_class(lambda agent: evac.FixedTargetEvacuation(agent, NxNode(target)))
 
     def _agent_with_evac_class(self, cls) -> Agent:
         self.curr_id += 1
@@ -31,6 +32,6 @@ class AgentFactory():
         elif t == Scenario.AgentType.CLOSEST_FRONTIER:
             return self.closest_frontier_agent()
         elif t == Scenario.AgentType.STATIC:
-            return self.static_target_agent(scn_agent.target)
+            return self.static_target_agent(scn_agent.goal)
         elif t == Scenario.AgentType.PANICKED:
             raise NotImplementedError()
