@@ -13,7 +13,7 @@ class RetargetingEvacuation(ClosestFrontierEvacuation):
         self.distance_with_goal = 0
 
     def step(self) -> ReservationNode:
-        if self.distance_with_goal >= 2*self.distance_to_goal:
+        if self.distance_with_goal >= 2 * self.distance_to_goal:
             self.agent.log("Waiting too long for goal, retargeting")
             old_goal = self.goal
             self.retarget()

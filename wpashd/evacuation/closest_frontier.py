@@ -24,6 +24,7 @@ class ClosestFrontierFinder(AStar):
         path = self.reconstruct_path()
         return (cast(NxNode, path[0]), len(path))
 
+
 class ClosestFrontierEvacuation(Evacuating):
     def find_goal(self) -> Tuple[NxNode, int]:
         cf_results = ClosestFrontierFinder(self.agent.level, NxNode(self.agent.pos.pos())).get_closest_frontier()

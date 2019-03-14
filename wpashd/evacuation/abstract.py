@@ -7,6 +7,7 @@ from wpashd.rra import RRAHeuristic
 from wpashd.state import State
 from wpashd.w_astar import WindowedAstar
 
+
 class Evacuating(State, ABC):
     def __init__(self, agent):
         self.agent = agent

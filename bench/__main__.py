@@ -1,5 +1,5 @@
 from pathlib import Path
-from sys import argv
+from sys import argv, stderr
 from time import process_time_ns
 from typing import Dict, List, Tuple
 import numpy as np
@@ -7,8 +7,10 @@ import numpy as np
 from wpashd import plan_evacuation
 from level import Level
 
+
 def bench_name(map_file, scen_file) -> str:
     return f"{Path(map_file).name}-{Path(scen_file).name}"
+
 
 def safety_times(level: Level, paths: List[List[int]]) -> List[int]:
     times = []
@@ -19,11 +21,13 @@ def safety_times(level: Level, paths: List[List[int]]) -> List[int]:
                 break
     return times
 
+
 def percentiles(times: List[int]) -> Dict[str, float]:
     res = {}
     for p in [25, 50, 75, 90, 95, 99, 100]:
         res[str(p)] = np.percentile(times, p)
     return res
+
 
 def print_paths(filename, paths):
     with open(filename, "w") as f:
@@ -31,7 +35,9 @@ def print_paths(filename, paths):
             num_strings = ["{:02d}".format(n) for n in path]
             print(*num_strings, file=f)
 
+
 def benchmark(map_file, scen_file) -> Dict[str, float]:
+    print(f"Benchmarking {map_file} {scen_file}", file=stderr)
     lvl = Level(map_file, scen_file)
     start = process_time_ns()
     paths = plan_evacuation(lvl, debug=False)
@@ -44,6 +50,7 @@ def benchmark(map_file, scen_file) -> Dict[str, float]:
     result["died"] = len(paths) - len(st)
     return result
 
+
 def parse_benchfile(f) -> List[Tuple[str, str]]:
     benchmarks = []
     for l in f:
@@ -54,6 +61,7 @@ def parse_benchfile(f) -> List[Tuple[str, str]]:
         for scen_file in scen_files.strip().split(" "):
             benchmarks.append((map_file, scen_file))
     return benchmarks
+
 
 def main():
     if len(argv) < 2:
@@ -67,6 +75,7 @@ def main():
         print(f"===============\n{scen}")
         for k in results[scen]:
             print(f"{k}:\t{results[scen][k]}")
+
 
 if __name__ == "__main__":
     main()

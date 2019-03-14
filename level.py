@@ -31,7 +31,7 @@ class Scenario:
     @staticmethod
     def from_file(path: str):
         with open(path, "r") as f:
-            s = Scenario()
+            s = Scenario([], [])
             danger_line = f.readline().strip()
             s.danger = list(
                 map(int, danger_line.split(" "))) if danger_line != "" else []
@@ -46,7 +46,7 @@ class Scenario:
                     int(parsed_desc[3]) if parsed_desc[3] is not None else None))
             return s
 
-    def __init__(self, danger=[], agents=[]):
+    def __init__(self, danger, agents):
         self.agents: List[Scenario.Agent] = agents
         self.danger: List[int] = danger
 
