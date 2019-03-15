@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from wpashd import plan_evacuation
-from level import Level
+from level import Level, Scenario
 
 
 def bench_name(map_file, scen_file) -> str:
@@ -21,6 +21,9 @@ def safety_times(level: Level, paths: List[List[int]]) -> List[int]:
                 break
     return times
 
+def max_no_panic_t(scen: Scenario, safety_ts: List[int]) -> int:
+    not_panicked_times = [t for i, t in enumerate(safety_ts) if scen.agents[i].type is not Scenario.AgentType.PANICKED]
+    return max(not_panicked_times)
 
 def percentiles(times: List[int]) -> Dict[str, float]:
     res = {}
@@ -45,6 +48,7 @@ def benchmark(map_file, scen_file) -> Dict[str, float]:
     stop = process_time_ns()
     st = safety_times(lvl, paths)
     result = percentiles(st)
+    result["nopanic"] = max_no_panic_t(lvl.scenario, st)
     result["agents"] = len(lvl.scenario.agents)
     result["time"] = (stop - start) / 1e9
     result["died"] = len(paths) - len(st)

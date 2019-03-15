@@ -18,6 +18,9 @@ class AgentFactory():
     def closest_frontier_agent(self) -> Agent:
         return self._agent_with_evac_class(evac.ClosestFrontierEvacuation)
 
+    def panicked_agent(self) -> Agent:
+        return self._agent_with_evac_class(evac.PanicEvacuation)
+
     def static_target_agent(self, target: int) -> Agent:
         return self._agent_with_evac_class(lambda agent: evac.FixedTargetEvacuation(agent, NxNode(target)))
 
@@ -34,4 +37,4 @@ class AgentFactory():
         elif t == Scenario.AgentType.STATIC:
             return self.static_target_agent(scn_agent.goal)
         elif t == Scenario.AgentType.PANICKED:
-            raise NotImplementedError()
+            return self.panicked_agent()
