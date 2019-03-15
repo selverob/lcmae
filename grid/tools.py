@@ -162,3 +162,16 @@ class StaticAgent(Tool):
     def on_mouse_drag(self, x: float, y: float, dx: float, dy: float,
                       button: int, modifiers: int):
         pass
+
+
+class CoordPrint(Tool):
+    def __init__(self, grid):
+        super().__init__(grid)
+
+    def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
+        coords = self.grid.coords_for_pos(x, y)
+        print(coords_to_id(self.grid.grid_size[1], *coords), coords)
+
+    def on_mouse_drag(self, x: float, y: float, dx: float, dy: float,
+                      button: int, modifiers: int):
+        pass

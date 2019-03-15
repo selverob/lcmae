@@ -82,6 +82,9 @@ class Grid(arcade.Window):
         elif char == "p":
             self.tool = tools.PanickedAgent(self)
             self.status_text = "Drawing panicked agents"
+        elif char == "h":
+            self.tool = tools.CoordPrint(self)
+            self.status_text = "Printing click coordinates"
         elif char == "m":
             self.write_out()
         elif char == ' ':
