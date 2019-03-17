@@ -29,5 +29,5 @@ class ClosestFrontierEvacuation(Evacuating):
     def find_goal(self) -> Tuple[NxNode, int]:
         cf_results = ClosestFrontierFinder(self.agent.level, NxNode(self.agent.pos.pos())).get_closest_frontier()
         if cf_results is None:
-            raise RuntimeError("No safe zone found")
+            raise RuntimeError(f"No safe zone found from {self.agent.pos.pos()}")
         return cf_results
