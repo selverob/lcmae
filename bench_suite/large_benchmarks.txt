@@ -1,0 +1,2 @@
+bench_suite/sydney_256.map: bench_suite/sydney_256_r.scen bench_suite/sydney_256_f.scen
+bench_suite/concert.map: bench_suite/concert_p.scen
