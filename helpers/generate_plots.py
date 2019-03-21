@@ -12,6 +12,7 @@ def to_percentages(df: pd.DataFrame):
 
 
 def make_plot(title: str, df: pd.DataFrame):
+    plt.figure()
     for col in df:
         plt.plot(df[col])
         plt.title(title)
