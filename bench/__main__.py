@@ -39,6 +39,13 @@ def print_paths(filename, paths):
             print(*num_strings, file=f)
 
 
+def per_type_averages(safety_ts: List[int], scen: Scenario) -> Dict[Scenario.AgentType, float]:
+    times: Dict[Scenario.AgentType, List[int]] = {typ: [] for typ in Scenario.AgentType}
+    for i, t in enumerate(safety_ts):
+        times[scen.agents[i].type].append(t)
+    return {typ: sum(ts) / len(ts) for typ, ts in times.items() if len(ts) > 0}
+
+
 def benchmark(map_file, scen_file) -> Dict[str, float]:
     print(f"Benchmarking {map_file} {scen_file}", file=stderr)
     lvl = Level(map_file, scen_file)
@@ -48,6 +55,8 @@ def benchmark(map_file, scen_file) -> Dict[str, float]:
     stop = process_time_ns()
     st = safety_times(lvl, paths)
     result = percentiles(st)
+    for typ, avg in per_type_averages(st, lvl.scenario).items():
+        result[str(typ)] = avg
     result["nopanic"] = max_no_panic_t(lvl.scenario, st)
     result["agents"] = len(lvl.scenario.agents)
     result["time"] = (stop - start) / 1e9
