@@ -2,5 +2,5 @@ bench_suite/blocker.map: bench_suite/blocker_allstatic.scen bench_suite/blocker_
 bench_suite/concert_tight.map: bench_suite/concert_tight_r.scen bench_suite/concert_tight_allstat.scen bench_suite/concert_tight_staticcrowd.scen
 bench_suite/concert.map: bench_suite/concert_r.scen bench_suite/concert_allstat.scen bench_suite/concert_staticcrowd.scen
 bench_suite/office_tight.map: bench_suite/office.scen
-bench_suite/office.map: bench_suite/office.scen
-bench_suite/shops.map: bench_suite/shops_r.scen bench_suite/shops_allstatic.scen
+bench_suite/office.map: bench_suite/office.scen bench_suite/office_half.scen bench_suite/office_sixth.scen
+bench_suite/shops.map: bench_suite/shops_all.scen bench_suite/shops_allstatic.scen bench_suite/shops_sixth.scen bench_suite/shops_morestatic.scen

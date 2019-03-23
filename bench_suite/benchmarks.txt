@@ -6,4 +6,4 @@ bench_suite/coop.map: bench_suite/coop1.scen bench_suite/coop2.scen
 bench_suite/hall.map: bench_suite/hall.scen
 bench_suite/office_tight.map: bench_suite/office.scen
 bench_suite/office.map: bench_suite/office.scen
-bench_suite/shops.map: bench_suite/shops_r.scen bench_suite/shops_allstatic.scen
+bench_suite/shops.map: bench_suite/shops_all.scen bench_suite/shops_allstatic.scen
