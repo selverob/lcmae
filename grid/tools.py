@@ -2,7 +2,7 @@ import arcade
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional, Tuple
-from level import Scenario, coords_to_id
+import level
 
 
 class Tool(ABC):
@@ -92,7 +92,7 @@ class Danger(DraggableTool):
 
 
 class Agent(DraggableTool):
-    agent_type: Optional[Scenario.AgentType] = None
+    agent_type: Optional[level.AgentType] = None
     color: Optional[arcade.Color] = None
 
     def add_object_at_coords(self, row: int, col: int):
@@ -106,22 +106,22 @@ class Agent(DraggableTool):
             del self.grid.agents[(row, col)]
 
     def create_agent_object(self, row: int, col: int):
-        origin_id = coords_to_id(self.grid.grid_size[1], row, col)
-        return Scenario.Agent(type(self).agent_type, origin_id, None)
+        origin_id = level.coords_to_id(self.grid.grid_size[1], row, col)
+        return level.Agent(type(self).agent_type, origin_id, None)
 
 
 class RetargetingAgent(Agent):
-    agent_type = Scenario.AgentType.RETARGETING
+    agent_type = level.AgentType.RETARGETING
     color = arcade.color.GREEN
 
 
 class FrontierAgent(Agent):
-    agent_type = Scenario.AgentType.CLOSEST_FRONTIER
+    agent_type = level.AgentType.CLOSEST_FRONTIER
     color = arcade.color.BLUE
 
 
 class PanickedAgent(Agent):
-    agent_type = Scenario.AgentType.PANICKED
+    agent_type = level.AgentType.PANICKED
     color = arcade.color.RED
 
 
@@ -155,9 +155,9 @@ class StaticAgent(Tool):
 
     def add_agent(self, origin: Tuple[int, int], target: Tuple[int, int]):
         self.grid.agents[origin] = self.filled_rectangle_at(*origin, arcade.color.ORANGE)
-        origin_id = coords_to_id(self.grid.grid_size[1], *origin)
-        target_id = coords_to_id(self.grid.grid_size[1], *target)
-        self.grid.agents.add_meta(origin, Scenario.Agent(Scenario.AgentType.STATIC, origin_id, target_id))
+        origin_id = level.coords_to_id(self.grid.grid_size[1], *origin)
+        target_id = level.coords_to_id(self.grid.grid_size[1], *target)
+        self.grid.agents.add_meta(origin, level.Agent(level.AgentType.STATIC, origin_id, target_id))
 
     def on_mouse_drag(self, x: float, y: float, dx: float, dy: float,
                       button: int, modifiers: int):
@@ -170,7 +170,7 @@ class CoordPrint(Tool):
 
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         coords = self.grid.coords_for_pos(x, y)
-        print(coords_to_id(self.grid.grid_size[1], *coords), coords)
+        print(level.coords_to_id(self.grid.grid_size[1], *coords), coords)
 
     def on_mouse_drag(self, x: float, y: float, dx: float, dy: float,
                       button: int, modifiers: int):

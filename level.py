@@ -21,10 +21,12 @@ class NoPathFound(Exception):
     pass
 
 
+AgentType = Enum("AgentType", "RETARGETING CLOSEST_FRONTIER STATIC PANICKED")
+Agent = namedtuple("Agent", ["type", "origin", "goal"])
+
+
 class Scenario:
     agent_re = re.compile("(\\d+)(.)(\\d+)?")
-    AgentType = Enum("AgentType", "RETARGETING CLOSEST_FRONTIER STATIC PANICKED")
-    Agent = namedtuple("Agent", ["type", "origin", "goal"])
     _typeMap = {"r": AgentType.RETARGETING, "f": AgentType.CLOSEST_FRONTIER, "s": AgentType.STATIC, "p": AgentType.PANICKED}
     _typeChars = {typ: code for code, typ in _typeMap.items()}
 
@@ -40,14 +42,14 @@ class Scenario:
                 return s
             for agent_desc in agents_line:
                 parsed_desc = Scenario.agent_re.fullmatch(agent_desc)
-                s.agents.append(Scenario.Agent(
+                s.agents.append(Agent(
                     Scenario._typeMap[parsed_desc[2]],
                     int(parsed_desc[1]),
                     int(parsed_desc[3]) if parsed_desc[3] is not None else None))
             return s
 
     def __init__(self, danger, agents):
-        self.agents: List[Scenario.Agent] = agents
+        self.agents: List[Agent] = agents
         self.danger: List[int] = danger
 
     def danger_coords(self, map_cols: int) -> List[Tuple[int, int]]:

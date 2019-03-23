@@ -1,5 +1,5 @@
 import wpashd.evacuation as evac
-from level import Level, Scenario
+from level import Agent as LevelAgent, AgentType, Level
 from graph.reservation_graph import ReservationGraph
 from graph.nx_graph import NxNode
 from .agent import Agent
@@ -28,13 +28,13 @@ class AgentFactory():
         self.curr_id += 1
         return Agent(self.curr_id, self.level, self.reservations, cls, debug=self.debug)
 
-    def from_scenario(self, scn_agent: Scenario.Agent) -> Agent:
+    def from_scenario(self, scn_agent: LevelAgent) -> Agent:
         t = scn_agent.type
-        if t == Scenario.AgentType.RETARGETING:
+        if t == AgentType.RETARGETING:
             return self.retargeting_agent()
-        elif t == Scenario.AgentType.CLOSEST_FRONTIER:
+        elif t == AgentType.CLOSEST_FRONTIER:
             return self.closest_frontier_agent()
-        elif t == Scenario.AgentType.STATIC:
+        elif t == AgentType.STATIC:
             return self.static_target_agent(scn_agent.goal)
-        elif t == Scenario.AgentType.PANICKED:
+        elif t == AgentType.PANICKED:
             return self.panicked_agent()

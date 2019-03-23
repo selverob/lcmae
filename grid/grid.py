@@ -1,7 +1,7 @@
 from typing import Iterable, Tuple
 import arcade
 import grid.tools as tools
-from level import Scenario, coords_to_id, id_to_coords
+from level import Scenario, coords_to_id, id_to_coords, AgentType
 from .shape_collection import ShapeCollection
 
 
@@ -11,7 +11,7 @@ class Grid(arcade.Window):
         self.cell_size = cell_size
         self.border = border
         self.screen_size = (self.grid_size[1] * (cell_size + border) + border,
-                            self.grid_size[0] * (cell_size + border) + border + 15)
+                            self.grid_size[0] * (cell_size + border) + border)
         super().__init__(self.screen_size[0], self.screen_size[1])
         self.level_map = level_map
         self.scenario = scenario
@@ -44,7 +44,7 @@ class Grid(arcade.Window):
         self.walls.draw()
         self.danger.draw()
         self.agents.draw()
-        arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=12)
+        #arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=12)
 
     def on_update(self, delta_time: float):
         if self.paths is not None and self.running:
@@ -94,7 +94,7 @@ class Grid(arcade.Window):
     def pos_for_coords(self, row, col):
         cell_with_border = (self.cell_size + self.border)
         x = col * cell_with_border + self.border + self.cell_size / 2
-        y = self.screen_size[1] - 15 - (
+        y = self.screen_size[1] - (
             row * cell_with_border + self.border + self.cell_size / 2)
         return (x, y)
 
@@ -140,13 +140,13 @@ class Grid(arcade.Window):
         for position, agent in zip(positions, self.scenario.agents):
             t = agent.type
             coords = id_to_coords(self.grid_size[1], position)
-            if t == Scenario.AgentType.RETARGETING:
+            if t == AgentType.RETARGETING:
                 r_tool.add_object_at_coords(*coords)
-            elif t == Scenario.AgentType.CLOSEST_FRONTIER:
+            elif t == AgentType.CLOSEST_FRONTIER:
                 f_tool.add_object_at_coords(*coords)
-            elif t == Scenario.AgentType.PANICKED:
+            elif t == AgentType.PANICKED:
                 p_tool.add_object_at_coords(*coords)
-            elif t == Scenario.AgentType.STATIC:
+            elif t == AgentType.STATIC:
                 s_tool.add_agent(coords, id_to_coords(self.grid_size[1], agent.goal))
 
     def write_out(self):

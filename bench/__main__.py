@@ -1,4 +1,5 @@
 from collections import namedtuple
+from multiprocessing import Pool
 from pathlib import Path
 from sys import argv, stderr
 from time import process_time_ns
@@ -6,7 +7,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from wpashd import plan_evacuation
-from level import Level, Scenario
+from level import Level, Scenario, AgentType
 
 
 def bench_name(map_file, scen_file) -> str:
@@ -23,7 +24,7 @@ def safety_times(level: Level, paths: List[List[int]]) -> List[int]:
     return times
 
 def max_no_panic_t(scen: Scenario, safety_ts: List[int]) -> int:
-    not_panicked_times = [t for i, t in enumerate(safety_ts) if scen.agents[i].type is not Scenario.AgentType.PANICKED]
+    not_panicked_times = [t for i, t in enumerate(safety_ts) if scen.agents[i].type is not AgentType.PANICKED]
     return max(not_panicked_times)
 
 def percentiles(times: List[int]) -> Dict[str, float]:
@@ -40,14 +41,14 @@ def print_paths(filename, paths):
             print(*num_strings, file=f)
 
 
-def per_type_safety_times(safety_ts: List[int], scen: Scenario) -> Dict[Scenario.AgentType, List[int]]:
-    times: Dict[Scenario.AgentType, List[int]] = {typ: [] for typ in Scenario.AgentType}
+def per_type_safety_times(safety_ts: List[int], scen: Scenario) -> Dict[AgentType, List[int]]:
+    times: Dict[AgentType, List[int]] = {typ: [] for typ in AgentType}
     for i, t in enumerate(safety_ts):
         times[scen.agents[i].type].append(t)
     return times
 
 
-def per_type_averages(safety_ts: Dict[Scenario.AgentType, List[int]]) -> Dict[Scenario.AgentType, float]:
+def per_type_averages(safety_ts: Dict[AgentType, List[int]]) -> Dict[AgentType, float]:
     return {typ: sum(ts) / len(ts) for typ, ts in safety_ts.items() if len(ts) > 0}
 
 
@@ -68,9 +69,9 @@ def safe_ratio_list(safety_ts: List[int]) -> List[float]:
 BenchResult = namedtuple("BenchResult", "stats paths ratios")
 
 
-def benchmark(map_file, scen_file) -> BenchResult:
-    print(f"Benchmarking {map_file} {scen_file}", file=stderr)
-    lvl = Level(map_file, scen_file)
+def benchmark(benchspec: Tuple[str, str]) -> BenchResult:
+    print(f"Benchmarking {benchspec[0]} {benchspec[1]}", file=stderr)
+    lvl = Level(*benchspec)
     start = process_time_ns()
     paths = plan_evacuation(lvl, debug=False)
     stop = process_time_ns()
@@ -113,8 +114,11 @@ def main():
     benchmarks = []
     with open(argv[1]) as f:
         benchmarks = parse_benchfile(f)
-    results = {bench_name(t[0], t[1]): benchmark(t[0], t[1]) for t in benchmarks}
-    for name, result in results.items():
+    results = []
+    with Pool(None) as p:
+        results = p.map(benchmark, benchmarks)
+    names = [bench_name(*t) for t in benchmarks]
+    for name, result in zip(names, results):
         print(f"===============\n{name}")
         for k in result.stats:
             print(f"{k}:\t{result.stats[k]}")
