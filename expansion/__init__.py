@@ -44,8 +44,8 @@ def expand(lvl: Level, time: int) -> Tuple[nx.DiGraph, List[Tuple[Dict[int, int]
     #    exp_g.add_edge(final_outputs[fo], sink, capacity=1)
     node_id_records = []
     outputs: Dict[int, int] = {}
-    for agent_pos in lvl.scenario.agents:
-        exp_g.add_edge(source, inputs[agent_pos], capacity=1)
+    for agent in lvl.scenario.agents:
+        exp_g.add_edge(source, inputs[agent.origin], capacity=1)
     for t in range(0, time):
         outputs = adder.node_clones(lvl.g, f"{t}o")
         for k in inputs:
@@ -81,7 +81,7 @@ def follow_path(start: int, flow_dict: Dict[int, Dict[int, int]], info: Dict[int
 def reconstruct(lvl: Level, flow_dict: Dict[int, Dict[int, int]], info: Dict[int, NodeInfo]) -> List[List[int]]:
     paths: List[List[int]] = [[]] * len(lvl.scenario.agents)
     start_flows = flow_dict[0]
-    agent_starts = {start: agent for agent, start in enumerate(lvl.scenario.agents)}
+    agent_starts = {agent.origin: i for i, agent in enumerate(lvl.scenario.agents)}
     for n in start_flows:
         if start_flows[n] > 0:
             agent = agent_starts[info[n].id]

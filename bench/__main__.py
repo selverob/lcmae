@@ -124,7 +124,7 @@ def main():
         print(f"===============\n{name}")
         for k in result.stats:
             print(f"{k}:\t{result.stats[k]}")
-        print_paths(f"bench_solutions/{name}", result.paths)
+        print_paths(f"bench_solutions/{name}.sol", result.paths)
         with open(f"bench_solutions/charts/{name}.csv", "w") as f:
             print(*[t.name for t in result.ratios], sep=", ", file=f)
             expanded_ratios = expand_lists(*result.ratios.values())
