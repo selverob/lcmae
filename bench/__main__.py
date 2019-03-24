@@ -23,9 +23,11 @@ def safety_times(level: Level, paths: List[List[int]]) -> List[int]:
                 break
     return times
 
+
 def max_no_panic_t(scen: Scenario, safety_ts: List[int]) -> int:
     not_panicked_times = [t for i, t in enumerate(safety_ts) if scen.agents[i].type is not AgentType.PANICKED]
     return max(not_panicked_times)
+
 
 def percentiles(times: List[int]) -> Dict[str, float]:
     res = {}

@@ -44,7 +44,7 @@ class Grid(arcade.Window):
         self.walls.draw()
         self.danger.draw()
         self.agents.draw()
-        #arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=12)
+        # arcade.draw_text(self.status_text, 0, self.screen_size[1] - 12, arcade.color.BLACK, font_size=12)
 
     def on_update(self, delta_time: float):
         if self.paths is not None and self.running:

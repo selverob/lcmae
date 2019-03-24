@@ -1,5 +1,5 @@
 import typing
-from collections import deque, Counter
+from collections import deque
 from pqdict import pqdict
 
 from wpashd.state import State
@@ -105,4 +105,3 @@ class Surfing(State):
 
     def name(self) -> str:
         return "s"
-    

@@ -1,6 +1,7 @@
 from level import Level
 from graph.interface import Node
 
+
 class ManhattanDistanceHeuristic():
     def __init__(self, level: Level):
         self.level = level
