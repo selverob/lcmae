@@ -4,6 +4,7 @@ from collections import namedtuple
 import networkx as nx
 from level import Level
 
+
 class _NodeAdder:
     def __init__(self, g: nx.Graph):
         self.next_id = 0
@@ -20,9 +21,11 @@ class _NodeAdder:
     def node_clones(self, g: nx.Graph, label=None) -> Dict[int, int]:
         return {n: self.add(label=f"{n}-{label}") for n in g.node}
 
+
 NodeInfo = namedtuple("NodeInfo", ["id", "t", "type"])
 IN = 0
 OUT = 1
+
 
 def get_info(expansion_records: List[Tuple[Dict[int, int], Dict[int, int]]]) -> Dict[int, NodeInfo]:
     res: Dict[int, NodeInfo] = {}
@@ -33,15 +36,13 @@ def get_info(expansion_records: List[Tuple[Dict[int, int], Dict[int, int]]]) -> 
             res[outs[n]] = NodeInfo(n, t, OUT)
     return res
 
+
 def expand(lvl: Level, time: int) -> Tuple[nx.DiGraph, List[Tuple[Dict[int, int], Dict[int, int]]]]:
     exp_g = nx.DiGraph()
     adder = _NodeAdder(exp_g)
     source = adder.add("src")
     sink = adder.add("sink")
     inputs = adder.node_clones(lvl.g, "0i")
-    #final_outputs = {n: adder.add(f"{n}-fo") for n in lvl.g.node if lvl.is_safe(n)}
-    #for fo in final_outputs:
-    #    exp_g.add_edge(final_outputs[fo], sink, capacity=1)
     node_id_records = []
     outputs: Dict[int, int] = {}
     for agent in lvl.scenario.agents:
@@ -64,6 +65,7 @@ def expand(lvl: Level, time: int) -> Tuple[nx.DiGraph, List[Tuple[Dict[int, int]
                     exp_g.add_edge(outputs[k], sink, capacity=1)
     return (exp_g, node_id_records)
 
+
 def follow_path(start: int, flow_dict: Dict[int, Dict[int, int]], info: Dict[int, NodeInfo]) -> List[int]:
     current_node = start
     path = []
@@ -78,6 +80,7 @@ def follow_path(start: int, flow_dict: Dict[int, Dict[int, int]], info: Dict[int
                 break
     return path
 
+
 def reconstruct(lvl: Level, flow_dict: Dict[int, Dict[int, int]], info: Dict[int, NodeInfo]) -> List[List[int]]:
     paths: List[List[int]] = [[]] * len(lvl.scenario.agents)
     start_flows = flow_dict[0]
@@ -88,14 +91,17 @@ def reconstruct(lvl: Level, flow_dict: Dict[int, Dict[int, int]], info: Dict[int
             paths[agent] = follow_path(n, flow_dict, info)
     return paths
 
+
 def extend(path: List[int], t: int) -> List[int]:
     return path + ([path[-1]] * (t - len(path)))
+
 
 def annotate_with_flow(g: nx.DiGraph, flow_dict: Dict[int, Dict[int, int]]):
     for u in flow_dict:
         flows = flow_dict[u]
         for v in flows:
             g.edges[(u, v)]["flow"] = flows[v]
+
 
 def drawable_graph(g: nx.DiGraph) -> nx.DiGraph:
     drawable = nx.DiGraph()
@@ -105,11 +111,13 @@ def drawable_graph(g: nx.DiGraph) -> nx.DiGraph:
         drawable.add_edge(u_label, v_label, label=g.edges[(u, v)]["flow"])
     return drawable
 
+
 def evacuation_for_time(lvl: Level, t: int):
     exp_g, node_ids = expand(lvl, t)
     flow_val, flow_dict = nx.maximum_flow(exp_g, 0, 1)
     print(t, flow_val, file=stderr)
     return flow_val, flow_dict, node_ids
+
 
 def plan_evacuation(lvl: Level) -> List[List[int]]:
     Solution = namedtuple("Solution", ["flow", "flow_dict", "node_ids", "t"])

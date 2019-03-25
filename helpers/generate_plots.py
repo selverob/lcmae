@@ -17,6 +17,7 @@ AGENT_COLORS = {
 
 LINE_STYLES = ['solid', 'dashed', 'dashdot', 'dotted']
 
+
 def to_percentages(df: pd.DataFrame) -> pd.DataFrame:
     new_df = pd.DataFrame(columns=df.columns)
     for col in df.columns:
@@ -55,7 +56,7 @@ def group_plot(path: pl.PurePath, stems: List[str], percentages: List[pd.DataFra
     plt.figure()
     plt.title(path.stem)
     plt.xlabel("Time")
-    plt.ylabel("Safe agents")
+    plt.ylabel("Safe agents (%)")
     plt.yticks(range(0, 101, 10))
     plt.grid(True)
     with PdfPages(path) as pp:

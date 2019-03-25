@@ -96,10 +96,6 @@ class Surfing(State):
         if len(self.agent.next_path) == self.agent.lookahead // 2 or not self.agent.check_reservations():
             self.replan()
         next_node = self.agent.next_path.popleft()
-        # if len(self.lookback_set) == self.lookback:
-        #     print(self.agent.taken_path)
-        #     print(self.lookback_set)
-        #     self.lookback_set.remove(self.agent.taken_path[-self.lookback].pos())
         self.lookback_set.add(next_node.pos())
         return next_node
 
