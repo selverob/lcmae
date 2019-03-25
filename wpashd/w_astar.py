@@ -58,7 +58,7 @@ class WindowedAstar:
         this_reservable = (self._reservable_by(this_node) and self._reservable_by(this_node.incremented_t()))
         if this_reservable:
             neighbors.append((this_node, 1))
-        elif self.agent.pos.pos() == this_node.pos():
+        else:
             # Agent can always break another agent's reservation of the node
             # they're currently on, but the action is penalized
             neighbors.append((this_node, 2))

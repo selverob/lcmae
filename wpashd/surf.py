@@ -52,22 +52,19 @@ class Surfing(State):
         neighbors = []
         for k in self.agent.reservations.g[n.pos()].keys():
             rn = ReservationNode(k, n.t + 1)
-            if self._reservable_by(rn) and self._reservable_by(rn.incremented_t()):
+            if self._reservable_by(rn) and self._reservable_by(rn.incremented_t()) and self.agent.level.is_safe(rn.pos()):
                 cost = 2
-                # Going back to danger is heavily penalized
-                if not self.agent.level.is_safe(rn.pos()):
-                    cost = 4 * bp_factor
-                elif rn.pos() in self.lookback_set:
+                if rn.pos() in self.lookback_set:
                     cost = 3
                 neighbors.append((rn, cost))
         this_node = n.incremented_t()
         this_reservable = (self._reservable_by(this_node) and self._reservable_by(this_node.incremented_t()))
         if this_reservable:
             neighbors.append((this_node, 1 * bp_factor))
-        elif self.agent.pos.pos() == this_node.pos():
+        else:
             # Agent can always break another agent's reservation of the node
             # they're currently on, but the action is penalized
-            neighbors.append((this_node, 3 * bp_factor))
+            neighbors.append((this_node, 4 * bp_factor))
         return neighbors
 
     def _reservable_by(self, node: ReservationNode) -> bool:
