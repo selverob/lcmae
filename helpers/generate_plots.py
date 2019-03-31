@@ -63,7 +63,8 @@ def group_plot(path: pl.PurePath, stems: List[str], percentages: List[pd.DataFra
         for i, df in enumerate(percentages):
             for col in df:
                 line_name = stems[i].split("_")[-1].split(".")[0]
-                plt.plot(df[col],
+                data = list(df[col])
+                plt.plot(data[:data.index(100) + 1],
                          color=AGENT_COLORS[col.strip()],
                          label=f"{line_name} - {col.strip().lower()}",
                          linestyle=LINE_STYLES[i % len(LINE_STYLES)])
