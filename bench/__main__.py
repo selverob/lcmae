@@ -6,7 +6,8 @@ from time import process_time_ns
 from typing import Dict, List, Tuple
 import numpy as np
 
-from wpashd import plan_evacuation
+import wpashd
+import expansion
 from level import Level, Scenario, AgentType
 
 
@@ -75,13 +76,21 @@ def benchmark(benchspec: Tuple[str, str]) -> BenchResult:
     print(f"Benchmarking {benchspec[0]} {benchspec[1]}", file=stderr)
     lvl = Level(*benchspec)
     start = process_time_ns()
-    paths = plan_evacuation(lvl, debug=False)
+    paths = wpashd.plan_evacuation(lvl, debug=False)
     stop = process_time_ns()
     st = safety_times(lvl, paths)
     stats = percentiles(st)
     type_safety_times = per_type_safety_times(st, lvl.scenario)
     for typ, avg in per_type_averages(type_safety_times).items():
         stats[typ.name] = avg
+    # Done here because we cannot use lambdas in multiprocessing maps
+    benchmark_expansion = "-e" in argv
+    if benchmark_expansion and all(map(lambda a: a.type == AgentType.RETARGETING, lvl.scenario.agents)):
+        exp_start = process_time_ns()
+        exp_paths = expansion.plan_evacuation(lvl)
+        exp_stop = process_time_ns()
+        stats["expansion"] = len(exp_paths[0])
+        stats["expansion_time"] = (exp_stop - exp_start) / 1e9
     stats["nopanic"] = max_no_panic_t(lvl.scenario, st)
     stats["agents"] = len(lvl.scenario.agents)
     stats["time"] = (stop - start) / 1e9
