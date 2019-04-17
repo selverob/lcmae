@@ -4,11 +4,11 @@ from collections import deque
 from graph.nx_graph import NxNode
 from graph.reservation_graph import ReservationNode
 from lcmae.rra import RRAHeuristic
-from lcmae.state import State
+from lcmae.strategy import Strategy
 from lcmae.w_astar import WindowedAstar
 
 
-class Evacuating(State, ABC):
+class Evacuating(Strategy, ABC):
     def __init__(self, agent):
         self.agent = agent
         self.goal = None

@@ -2,11 +2,11 @@ import typing
 from collections import deque
 from pqdict import pqdict
 
-from lcmae.state import State
+from lcmae.strategy import Strategy
 from graph.reservation_graph import ReservationNode
 
 
-class Surfing(State):
+class Surfing(Strategy):
     def __init__(self, agent):
         self.agent = agent
         self.lookback = self.agent.lookahead // 2

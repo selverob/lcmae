@@ -16,7 +16,7 @@ import typing
 
 from graph.reservation_graph import ReservationGraph, ReservationNode, Reservation
 from level import Level
-from lcmae.state import State
+from lcmae.strategy import Strategy
 from lcmae.surf import Surfing
 
 
@@ -31,7 +31,7 @@ class Agent:
         self.evac_class = evacuation_class
         self.debug = debug
         # Initialized in step()
-        self.state: typing.Optional[State] = None
+        self.strategy: typing.Optional[Strategy] = None
 
     @property
     def pos(self) -> ReservationNode:
@@ -40,16 +40,16 @@ class Agent:
     def step(self):
         # Initialized here to respect the random
         # agent order in main function
-        if self.state is None and self.is_safe():
-            self.state = Surfing(self)
-        elif self.state is None and not self.is_safe():
-            self.state = self.evac_class(self)
-        elif not isinstance(self.state, Surfing) and self.is_safe():
-            self.state = Surfing(self)
-        elif isinstance(self.state, Surfing) and not self.is_safe():
-            self.state = self.evac_class(self)
+        if self.strategy is None and self.is_safe():
+            self.strategy = Surfing(self)
+        elif self.strategy is None and not self.is_safe():
+            self.strategy = self.evac_class(self)
+        elif not isinstance(self.strategy, Surfing) and self.is_safe():
+            self.strategy = Surfing(self)
+        elif isinstance(self.strategy, Surfing) and not self.is_safe():
+            self.strategy = self.evac_class(self)
 
-        self.taken_path.append(self.state.step())
+        self.taken_path.append(self.strategy.step())
 
     def is_safe(self) -> bool:
         return self.level.is_safe(self.pos.pos())
@@ -85,5 +85,5 @@ class Agent:
 
     def log(self, msg):
         if self.debug:
-            s = self.state.name() if self.state is not None else ""
+            s = self.strategy.name() if self.strategy is not None else ""
             print(f"a={self.id}{s} t={self.taken_path[-1].t}: {msg}", file=stderr)
