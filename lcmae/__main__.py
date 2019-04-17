@@ -1,6 +1,6 @@
 import cProfile
 from sys import stderr, argv
-from wpashd import plan_evacuation
+from lcmae import plan_evacuation
 from level import Level
 
 def main():

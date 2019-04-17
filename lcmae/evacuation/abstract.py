@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 from collections import deque
 from graph.nx_graph import NxNode
 from graph.reservation_graph import ReservationNode
-from wpashd.rra import RRAHeuristic
-from wpashd.state import State
-from wpashd.w_astar import WindowedAstar
+from lcmae.rra import RRAHeuristic
+from lcmae.state import State
+from lcmae.w_astar import WindowedAstar
 
 
 class Evacuating(State, ABC):

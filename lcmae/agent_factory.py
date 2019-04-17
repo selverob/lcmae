@@ -1,4 +1,4 @@
-import wpashd.evacuation as evac
+import lcmae.evacuation as evac
 from level import Agent as LevelAgent, AgentType, Level
 from graph.reservation_graph import ReservationGraph
 from graph.nx_graph import NxNode

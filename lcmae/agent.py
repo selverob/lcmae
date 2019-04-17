@@ -16,8 +16,8 @@ import typing
 
 from graph.reservation_graph import ReservationGraph, ReservationNode, Reservation
 from level import Level
-from wpashd.state import State
-from wpashd.surf import Surfing
+from lcmae.state import State
+from lcmae.surf import Surfing
 
 
 class Agent:

@@ -1,4 +1,4 @@
-from wpashd.agent import Agent
+from lcmae.agent import Agent
 from graph.reservation_graph import ReservationNode
 from .closest_frontier import ClosestFrontierEvacuation
 

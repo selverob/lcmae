@@ -2,7 +2,7 @@ from typing import Tuple
 from astar import AStar
 from manhattan import ManhattanDistanceHeuristic
 from graph.nx_graph import NxGraph, NxNode
-from wpashd.agent import Agent
+from lcmae.agent import Agent
 from .abstract import Evacuating
 
 

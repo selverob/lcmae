@@ -6,7 +6,7 @@ from time import process_time_ns
 from typing import Dict, List, Tuple
 import numpy as np
 
-import wpashd
+import lcmae
 import expansion
 from level import Level, Scenario, AgentType
 
@@ -76,7 +76,7 @@ def benchmark(benchspec: Tuple[str, str]) -> BenchResult:
     print(f"Benchmarking {benchspec[0]} {benchspec[1]}", file=stderr)
     lvl = Level(*benchspec)
     start = process_time_ns()
-    paths = wpashd.plan_evacuation(lvl, debug=False)
+    paths = lcmae.plan_evacuation(lvl, debug=False)
     stop = process_time_ns()
     st = safety_times(lvl, paths)
     stats = percentiles(st)

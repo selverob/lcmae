@@ -2,7 +2,7 @@ import typing
 from collections import deque
 from pqdict import pqdict
 
-from wpashd.state import State
+from lcmae.state import State
 from graph.reservation_graph import ReservationNode
 
 
