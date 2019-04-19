@@ -25,11 +25,6 @@ def safety_times(level: Level, paths: List[List[int]]) -> List[int]:
     return times
 
 
-def max_no_panic_t(scen: Scenario, safety_ts: List[int]) -> int:
-    not_panicked_times = [t for i, t in enumerate(safety_ts) if scen.agents[i].type is not AgentType.PANICKED]
-    return max(not_panicked_times)
-
-
 def percentiles(times: List[int]) -> Dict[str, float]:
     res = {}
     for p in [25, 50, 75, 90, 95, 99, 100]:
@@ -51,8 +46,8 @@ def per_type_safety_times(safety_ts: List[int], scen: Scenario) -> Dict[AgentTyp
     return times
 
 
-def per_type_averages(safety_ts: Dict[AgentType, List[int]]) -> Dict[AgentType, float]:
-    return {typ: sum(ts) / len(ts) for typ, ts in safety_ts.items() if len(ts) > 0}
+def per_type_makespans(safety_ts: Dict[AgentType, List[int]]) -> Dict[AgentType, float]:
+    return {typ: max(ts) for typ, ts in safety_ts.items() if len(ts) > 0}
 
 
 def safe_ratio_list(safety_ts: List[int]) -> List[float]:
@@ -81,8 +76,11 @@ def benchmark(benchspec: Tuple[str, str]) -> BenchResult:
     st = safety_times(lvl, paths)
     stats = percentiles(st)
     type_safety_times = per_type_safety_times(st, lvl.scenario)
-    for typ, avg in per_type_averages(type_safety_times).items():
-        stats[typ.name] = avg
+    for typ, st in type_safety_times.items():
+        if len(st) > 0:
+            stats[f"{typ.name.lower()} agents"] = len(st)
+    for typ, m in per_type_makespans(type_safety_times).items():
+        stats[f"{typ.name.lower()} makespan"] = m
     # Done here because we cannot use lambdas in multiprocessing maps
     benchmark_expansion = "-e" in argv
     if benchmark_expansion and all(map(lambda a: a.type == AgentType.RETARGETING, lvl.scenario.agents)):
@@ -91,7 +89,6 @@ def benchmark(benchspec: Tuple[str, str]) -> BenchResult:
         exp_stop = process_time_ns()
         stats["expansion"] = len(exp_paths[0])
         stats["expansion_time"] = (exp_stop - exp_start) / 1e9
-    stats["nopanic"] = max_no_panic_t(lvl.scenario, st)
     stats["agents"] = len(lvl.scenario.agents)
     stats["time"] = (stop - start) / 1e9
     stats["died"] = len(paths) - len(st)
