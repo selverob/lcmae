@@ -65,7 +65,7 @@ def group_plot(axis: plt.Axes, title: str, stems: List[str], percentages: List[p
     axis.set_ylabel("Agenty v bezpečí (%)")
     axis.set_yticks(range(0, 101, 10))
     axis.grid(True)
-    legend = ([], [])
+    legend: Tuple[List[plt.Line2D], List[str]] = ([], [])
     dark = get_cmap("Dark2")
     for i, df in enumerate(percentages):
         line_name = stems[i].split("_")[-1].split(".")[0]

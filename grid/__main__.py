@@ -49,7 +49,7 @@ def main():
         for _ in range(4):
             map_f.readline()
         lines = list(map(lambda l: l.strip(), map_f.readlines()))
-    Grid(lines, lvl.scenario, paths, cell_size=15, border=0)
+    Grid(lines, lvl.scenario, paths, cell_size=20, border=0)
     arcade.run()
 
 
