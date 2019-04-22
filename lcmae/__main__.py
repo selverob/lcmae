@@ -1,7 +1,7 @@
-import cProfile
 from sys import stderr, argv
 from lcmae import plan_evacuation
 from level import Level
+
 
 def main():
     map_path, scen_path = argv[1], argv[2]
@@ -20,4 +20,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #cProfile.run("main()")

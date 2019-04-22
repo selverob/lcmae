@@ -4,6 +4,24 @@ from typing import List
 from graph.reservation_graph import ReservationGraph, Reservation, ReservationNode
 from level import Level
 from .agent_factory import AgentFactory
+from .agent import Agent
+
+
+def step_and_divide(agents: List[Agent]) -> (List[Agent], List[Agent]):
+    random.shuffle(agents)
+    endangered = []
+    safe = []
+    for agent in agents:
+        agent.step()
+        if agent.is_safe():
+            safe.append(agent)
+        else:
+            endangered.append(agent)
+    return endangered, safe
+
+
+def agent_broke_deadlock(a: Agent) -> bool:
+    return len(a.taken_path) < 2 or a.taken_path[-1].pos() != a.taken_path[-2].pos()
 
 
 def plan_evacuation(level: Level, random_seed=42, debug=True) -> List[List[int]]:
@@ -16,37 +34,19 @@ def plan_evacuation(level: Level, random_seed=42, debug=True) -> List[List[int]]
             n = agent.pos.incremented_t(i)
             reservations.reserve(Reservation(n, agent.id, 2))
             agent.next_path.append(n)
-    safe = set([agent.id for agent in agents if agent.is_safe()])
-    endangered = set([agent.id for agent in agents if not agent.is_safe()])
+    safe = [agent for agent in agents if agent.is_safe()]
+    endangered = [agent for agent in agents if not agent.is_safe()]
     # Time is watched independently by agents but this variable makes
     # debugging easier
     t = 0
     deadlock_timer = 0
     while deadlock_timer < 15 and endangered:
         deadlock_timer += 1
-        endangered_order = list(endangered)
-        newly_safe = []
-        newly_endangered = []
-        random.shuffle(endangered_order)
-        for i in endangered_order:
-            agents[i].step()
-            if len(agents[i].taken_path) < 2 or agents[i].taken_path[-1].pos() != agents[i].taken_path[-2].pos():
-                deadlock_timer = 0
-            if agents[i].is_safe():
-                newly_safe.append(i)
-        safe_order = list(safe)
-        random.shuffle(safe_order)
-        for i in safe_order:
-            agents[i].step()
-            if len(agents[i].taken_path) < 2 or agents[i].taken_path[-1].pos() != agents[i].taken_path[-2].pos():
-                deadlock_timer = 0
-            if not agents[i].is_safe():
-                newly_endangered.append(i)
-        for a in newly_safe:
-            endangered.remove(a)
-            safe.add(a)
-        for a in newly_endangered:
-            safe.remove(a)
-            endangered.add(a)
+        still_endangered, newly_safe = step_and_divide(endangered)
+        newly_endangered, still_safe = step_and_divide(safe)
+        endangered = still_endangered + newly_endangered
+        safe = still_safe + newly_safe
+        if any(map(agent_broke_deadlock, safe)) or any(map(agent_broke_deadlock, endangered)):
+            deadlock_timer = 0
         t += 1
     return [list(map(ReservationNode.pos, agent.taken_path)) for agent in agents]
