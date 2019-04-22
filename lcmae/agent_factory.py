@@ -38,3 +38,4 @@ class AgentFactory():
             return self.static_target_agent(scn_agent.goal)
         elif t == AgentType.PANICKED:
             return self.panicked_agent()
+        raise TypeError("Unknown agent type")
