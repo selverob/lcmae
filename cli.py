@@ -7,14 +7,16 @@ This CLI replaces `__main__.py` files scattered around the project with
 a single, unified interface for running everything.
 """
 from typing import List
+import pathlib as pl
 
 import click
 
 import bench
+import plots
 
 
-def print_paths(filename: str, paths: List[List[int]]):
-    """Print the given agent paths into a file, in the format used by all the tools"""
+def write_paths(filename: str, paths: List[List[int]]):
+    """Write the given agent paths into a file, in the format used by all the tools"""
     with open(filename, "w") as f:
         for path in paths:
             num_strings = ["{:02d}".format(n) for n in path]
@@ -55,7 +57,13 @@ def plan():
 @click.option("--flow/--no-flow",
               default=False,
               help="Also run the network flow algorithm on eligible scenarios")
-def benchmark(benchfile, processes, format, flow):
+@click.option("-p", "--plot-dest", 'plot_dest',
+              type=click.Path(exists=True, file_okay=False),
+              help="Directory into which agent safety plots should be saved")
+@click.option("-d", "--path-dest", 'path_dest',
+              type=click.Path(exists=True, file_okay=False),
+              help="Directory into which evacuation plan paths should be saved")
+def benchmark(benchfile, processes, format, flow, plot_dest, path_dest):
     """Evaluate benchmark algorithms' performance
 
     Plans evacuations for multiple maps and scenarios (optionally in parallel)
@@ -76,6 +84,12 @@ def benchmark(benchfile, processes, format, flow):
         print(results.as_test())
     else:
         print(results.as_json())
+    if plot_dest:
+        plots.generate_plots(results, pl.Path(plot_dest))
+    if path_dest:
+        path = pl.Path(path_dest)
+        for name, result in results.results.items():
+            write_paths(path.joinpath(f"{name}.out"), result.paths)
 
 
 @cli.command()
