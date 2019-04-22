@@ -23,8 +23,6 @@ AGENT_STYLES = {
     "PANICKED": "dashdot"
 }
 
-LINE_STYLES = ['solid', 'dashed', 'dashdot', 'dotted']
-
 
 def to_percentages(df: pd.DataFrame) -> pd.DataFrame:
     new_df = pd.DataFrame(columns=df.columns)
@@ -47,7 +45,8 @@ def make_plot(title: str, df: pd.DataFrame):
 
 def chart_groups(elems: Iterator[pl.PurePath]) -> List[Tuple[str, List[pl.PurePath]]]:
     res = []
-    filtered = filter(lambda p: p.suffix == ".csv", elems)
+    filtered = [p for p in elems if p.suffix == ".csv"]
+    filtered.sort()
     for m, charts in groupby(filtered, lambda s: s.name.split(".")[0]):
         res.append((m, list(charts)))
     return res
@@ -62,8 +61,8 @@ def single_run_plot(path: pl.PurePath, percentages: pd.DataFrame):
 
 def group_plot(axis: plt.Axes, title: str, stems: List[str], percentages: List[pd.DataFrame]):
     axis.set_title(title)
-    axis.set_xlabel("Time")
-    axis.set_ylabel("Safe agents (%)")
+    axis.set_xlabel("Čas")
+    axis.set_ylabel("Agenty v bezpečí (%)")
     axis.set_yticks(range(0, 101, 10))
     axis.grid(True)
     legend = ([], [])
@@ -74,14 +73,14 @@ def group_plot(axis: plt.Axes, title: str, stems: List[str], percentages: List[p
             data = list(df[col])
             xdata = data[:data.index(100) + 1]
             axis.plot(xdata,
-                      color=dark(i),#AGENT_COLORS[col.strip()],
+                      color=dark(i),
                       linestyle=AGENT_STYLES[col.strip()],
-                      linewidth=2)#LINE_STYLES[i % len(LINE_STYLES)])
+                      linewidth=2)
             if j == 0:
-                legend_line = plt.Line2D(xdata, 
-                                        range(0, len(xdata)),
-                                        color=dark(i),
-                                        linestyle="solid")#LINE_STYLES[i % len(LINE_STYLES)])
+                legend_line = plt.Line2D(xdata,
+                                         range(0, len(xdata)),
+                                         color=dark(i),
+                                         linestyle="solid")
                 legend[0].append(legend_line)
                 legend[1].append(line_name)
     axis.legend(*legend, loc=4, fontsize="large")
@@ -95,12 +94,13 @@ def process_group(group: Tuple[str, List[pl.PurePath]], group_axis: plt.Axes):
 
 
 if __name__ == "__main__":
+    plt.rcParams["font.family"] = "Latin Modern Roman"
     dir_path = pl.PurePath(argv[1])
     file_paths = map(dir_path.joinpath, listdir(dir_path))
     groups = chart_groups(file_paths)
     group_fig, group_axes = plt.subplots(ncols=2,
                                          nrows=len(groups) // 2,
-                                         figsize=(8, 6),
+                                         figsize=(8, 8),
                                          tight_layout=True,
                                          sharey=True)
     for g, axis in zip(groups, group_axes.flatten()):
