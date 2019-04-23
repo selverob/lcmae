@@ -1,7 +1,6 @@
 import re
-from collections import namedtuple
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, NamedTuple
 import networkx as nx
 
 
@@ -22,7 +21,13 @@ class NoPathFound(Exception):
 
 
 AgentType = Enum("AgentType", "RETARGETING CLOSEST_FRONTIER STATIC PANICKED")
-Agent = namedtuple("Agent", ["type", "origin", "goal"])
+
+
+class Agent(NamedTuple):
+    """Data about a single agent loaded from the scenario"""
+    type: AgentType
+    origin: int
+    goal: int
 
 
 class Scenario:

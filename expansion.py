@@ -115,11 +115,10 @@ def drawable_graph(g: nx.DiGraph) -> nx.DiGraph:
 def evacuation_for_time(lvl: Level, t: int):
     exp_g, node_ids = expand(lvl, t)
     flow_val, flow_dict = nx.maximum_flow(exp_g, 0, 1)
-    print(t, flow_val, file=stderr)
     return flow_val, flow_dict, node_ids
 
 
-def plan_evacuation(lvl: Level) -> List[List[int]]:
+def plan_evacuation(lvl: Level, debug=True) -> List[List[int]]:
     Solution = namedtuple("Solution", ["flow", "flow_dict", "node_ids", "t"])
     best_sol = Solution(0, None, None, 0)
     highest_wrong = 0
@@ -134,9 +133,12 @@ def plan_evacuation(lvl: Level) -> List[List[int]]:
             t += t // 2
 
     while True:
-        print("Range:", highest_wrong, best_sol.t, file=stderr)
+        if debug:
+            print("Range:", highest_wrong, best_sol.t, file=stderr)
         t = highest_wrong + (best_sol.t - highest_wrong) // 2
         flow_val, flow_dict, node_ids = evacuation_for_time(lvl, t)
+        if debug:
+            print(f"t={t} maxflow={flow_val}", file=stderr)
         if flow_val == len(lvl.scenario.agents):
             best_sol = Solution(flow_val, flow_dict, node_ids, t)
             if t == highest_wrong + 1:

@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 """A module which provides a unified CLI to all the functionality.
 
 This module serves as a single entry point for a user. It exposes a CLI
@@ -8,19 +9,30 @@ a single, unified interface for running everything.
 """
 from typing import List
 import pathlib as pl
+from sys import stderr
 
 import click
 
 import bench
 import plots
+import lcmae
+import expansion
+from level import Level
+
+
+def paths_to_str(paths: List[List[int]]) -> str:
+    """Create a string with given paths printed in a readable format"""
+    lines = []
+    for path in paths:
+        nums = ["{:02d}".format(n) for n in path]
+        lines.append(" ".join(nums))
+    return "\n".join(lines)
 
 
 def write_paths(filename: str, paths: List[List[int]]):
     """Write the given agent paths into a file, in the format used by all the tools"""
     with open(filename, "w") as f:
-        for path in paths:
-            num_strings = ["{:02d}".format(n) for n in path]
-            print(*num_strings, file=f)
+        print(paths_to_str(paths), file=f)
 
 
 @click.group()
@@ -39,11 +51,23 @@ def cli():
 @click.option("--debug/--no-debug",
               default=False,
               help="Print planning algorithm's debug output")
-@click.argument("map")
-@click.argument("scenario")
-def plan():
+@click.argument("map_path",
+                type=click.Path(exists=True, dir_okay=False))
+@click.argument("scenario_path",
+                type=click.Path(exists=True, dir_okay=False))
+def plan(map_path, scenario_path, algorithm, visualize, debug):
     "Create an evacuation plan for a map and a scenario"
-    pass
+    lvl = Level(map_path, scenario_path)
+    if not lvl.frontier:
+        print("No passage to safety exists!", file=stderr)
+        exit(2)
+    paths: List[List[int]] = []
+    if algorithm == "lcmae":
+        paths = lcmae.plan_evacuation(lvl, debug=debug)
+    else:
+        paths = expansion.plan_evacuation(lvl, debug=debug)
+    paths = lcmae.plan_evacuation(lvl) if algorithm == "lcmae" else expansion.plan_evacuation(lvl)
+    print(paths_to_str(paths))
 
 
 @cli.command()
