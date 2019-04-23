@@ -1,5 +1,8 @@
+"""
+This module implements evacuation planning using the LC-MAE algorithm
+"""
 import random
-from typing import List
+from typing import List, Tuple
 
 from graph.reservation_graph import ReservationGraph, Reservation, ReservationNode
 from level import Level
@@ -7,7 +10,8 @@ from .agent_factory import AgentFactory
 from .agent import Agent
 
 
-def step_and_divide(agents: List[Agent]) -> (List[Agent], List[Agent]):
+def step_and_divide(agents: List[Agent]) -> Tuple[List[Agent], List[Agent]]:
+    """Call step() on all the given agents and divide them into endangered and safe ones"""
     random.shuffle(agents)
     endangered = []
     safe = []
@@ -21,10 +25,12 @@ def step_and_divide(agents: List[Agent]) -> (List[Agent], List[Agent]):
 
 
 def agent_broke_deadlock(a: Agent) -> bool:
+    """Check whether the given agent moved into another vertex"""
     return len(a.taken_path) < 2 or a.taken_path[-1].pos() != a.taken_path[-2].pos()
 
 
 def plan_evacuation(level: Level, random_seed=42, debug=True) -> List[List[int]]:
+    """Plan the evacuation on the given level using the LC-MAE algorithm"""
     random.seed(random_seed)
     reservations = ReservationGraph(level.g)
     factory = AgentFactory(level, reservations, debug=debug)

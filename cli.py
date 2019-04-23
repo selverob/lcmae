@@ -14,25 +14,11 @@ from sys import stderr
 import click
 
 import bench
-import plots
-import lcmae
 import expansion
+import grid
+import lcmae
+import plots
 from level import Level
-
-
-def paths_to_str(paths: List[List[int]]) -> str:
-    """Create a string with given paths printed in a readable format"""
-    lines = []
-    for path in paths:
-        nums = ["{:02d}".format(n) for n in path]
-        lines.append(" ".join(nums))
-    return "\n".join(lines)
-
-
-def write_paths(filename: str, paths: List[List[int]]):
-    """Write the given agent paths into a file, in the format used by all the tools"""
-    with open(filename, "w") as f:
-        print(paths_to_str(paths), file=f)
 
 
 @click.group()
@@ -117,9 +103,85 @@ def benchmark(benchfile, processes, format, flow, plot_dest, path_dest):
 
 
 @cli.command()
-def gui():
+@click.option("-s", "--square-size",
+              default=15,
+              help="Size of a single square on a map, in pixels")
+@click.option("-b", "--border-size",
+              default=0,
+              help="Size of the border between squares, in pixels")
+@click.argument("map_path",
+                type=click.Path(exists=True, dir_okay=False))
+@click.argument("scenario_path",
+                type=click.Path(exists=True, dir_okay=False))
+@click.argument("solution_path",
+                required=False,
+                type=click.Path(exists=True, dir_okay=False))
+def gui(map_path, scenario_path, solution_path, square_size, border_size):
     """Show a GUI for plan visualization and editing."""
-    pass
+    level = Level(map_path, scenario_path)
+    paths = parse_paths(solution_path)
+    grid.start(level, map_path, paths, cell_size=square_size, border=border_size)
+
+
+@cli.command()
+@click.argument("map_path",
+                type=click.Path(exists=True, dir_okay=False))
+@click.argument("scenario_path",
+                type=click.Path(exists=True, dir_okay=False))
+@click.argument("solution_path",
+                required=False,
+                type=click.Path(exists=True, dir_okay=False))
+def check(map_path, scenario_path, solution_path):
+    """Check the validity of given solution."""
+    level = Level(map_path, scenario_path)
+    paths = parse_paths(solution_path)
+    check_paths(paths, level)
+
+
+def paths_to_str(paths: List[List[int]]) -> str:
+    """Create a string with given paths printed in a readable format"""
+    lines = []
+    for path in paths:
+        nums = ["{:02d}".format(n) for n in path]
+        lines.append(" ".join(nums))
+    return "\n".join(lines)
+
+
+def write_paths(filename: str, paths: List[List[int]]):
+    """Write the given agent paths into a file, in the format used by all the tools"""
+    with open(filename, "w") as f:
+        print(paths_to_str(paths), file=f)
+
+
+def parse_paths(path: str) -> List[List[int]]:
+    result = []
+    with open(path) as f:
+        lines = f.readlines()
+        if lines[-1] == [""]:
+            lines = lines[:-1]
+        for line in lines:
+            result.append(list(map(int, line.strip().split(" "))))
+    return result
+
+
+def check_paths(paths: List[List[int]], level: Level):
+    path_len = len(paths[0])
+    for p in paths:
+        if len(p) != path_len:
+            print("Not all paths have equal sizes")
+            exit(1)
+    for t in range(path_len):
+        s = set()
+        for p in paths:
+            s.add(p[t])
+        if len(s) != len(paths):
+            print(f"Collision at time {t}")
+    for agent, p in enumerate(paths):
+        if level.scenario.agents[agent].origin != p[0]:
+            print("Agent starts at a point different from the scenario")
+        for i in range(1, len(p)):
+            if p[i - 1] not in level.g[p[i]] and p[i - 1] != p[i]:
+                print(f"Non-adjacent movement of agent {agent} at time {i}")
 
 
 if __name__ == "__main__":
