@@ -11,8 +11,8 @@ max-flow based one and of visualizing it.
 
 ### (Optional) Activate Virtualenv
 
-This is not required but it will help your system not to get
-polluted with simulator's dependencies.
+This is not required but it will help your system not to get polluted with
+simulator's dependencies.
 
 - Change into the directory in which this README is located
 - Run `python -m venv .`
@@ -26,15 +26,19 @@ on your PATH.
 
 # Running
 
-If you just start `evacsim`, it should print all the information about
-its command-line interface. You can use `plan` to generate evacuation
-plans for maps and scenarios and `check` to check them for validity (especially
-useful if you're extending the simulator with new features).
+If you just start `evacsim`, it should print all the information about its
+command-line interface. You can use `plan` to generate evacuation plans for maps
+and scenarios and `check` to check them for validity (especially useful if
+you're extending the simulator with new features).
+
+For the simplest experience, use `evacsim plan --visualize <MAP> <SCENARIO>`.
+It will plan the evacuation (using LV-MAE by default) and show you the visualization
+GUI with the plans loaded automatically.
 
 # GUI commands
-GUI is controlled with mouse and keyboard. Left mouse button adds objects of
-a given type to the map, right mouse button removes them. Keyboard buttons
-control what object is added to the map or removed from it:
+GUI is controlled with mouse and keyboard. Left mouse button adds objects of a
+given type to the map, right mouse button removes them. Keyboard buttons control
+what object is added to the map or removed from it:
 
 |   Key   | Function                                    |
 |:-------:|---------------------------------------------|

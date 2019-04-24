@@ -15,10 +15,12 @@ import click
 
 import evacsim.bench as bench
 import evacsim.expansion as expansion
-import evacsim.grid as grid
 import evacsim.lcmae as lcmae
 import evacsim.plots as plots
 from .level import Level
+# grid is imported only when it's required for the application to work.
+# That's because GitLab CI doesn't have OpenGL libraries installed and
+# will fail if we try to import arcade, even indirectly.
 
 
 @click.group()
@@ -52,8 +54,11 @@ def plan(map_path, scenario_path, algorithm, visualize, debug):
         paths = lcmae.plan_evacuation(lvl, debug=debug)
     else:
         paths = expansion.plan_evacuation(lvl, debug=debug)
-    paths = lcmae.plan_evacuation(lvl) if algorithm == "lcmae" else expansion.plan_evacuation(lvl)
-    print(paths_to_str(paths))
+    if visualize:
+        import evacsim.grid as grid
+        grid.start(lvl, map_path, paths)
+    else:
+        print(paths_to_str(paths))
 
 
 @cli.command()
@@ -119,8 +124,12 @@ def benchmark(benchfile, processes, format, flow, plot_dest, path_dest):
                 type=click.Path(exists=True, dir_okay=False))
 def gui(map_path, scenario_path, solution_path, square_size, border_size):
     """Show a GUI for plan visualization and editing."""
+    import evacsim.grid as grid
     level = Level(map_path, scenario_path)
-    paths = parse_paths(solution_path)
+    if solution_path:
+        paths = parse_paths(solution_path)
+    else:
+        paths = None
     grid.start(level, map_path, paths, cell_size=square_size, border=border_size)
 
 
