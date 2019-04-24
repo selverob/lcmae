@@ -2,6 +2,5 @@ arcade>=2.0.0b6
 networkx==2.2
 pqdict>=1.0
 numpy>=1.16
-pandas>=0.24.0
 matplotlib>=3.0.0
 click>=7.0.0
