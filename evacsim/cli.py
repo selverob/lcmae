@@ -7,7 +7,7 @@ which can be use to call the different commands and set their properties.
 This CLI replaces `__main__.py` files scattered around the project with
 a single, unified interface for running everything.
 """
-from typing import List
+from typing import List, Set
 import pathlib as pl
 from sys import stderr
 
@@ -19,7 +19,7 @@ import evacsim.lcmae as lcmae
 import evacsim.plots as plots
 from .level import Level
 # grid is imported only when it's required for the application to work.
-# That's because GitLab CI doesn't have OpenGL libraries installed and
+# That's because GitLab CI doesn't have OpenGL libraries installed and
 # will fail if we try to import arcade, even indirectly.
 
 
@@ -30,7 +30,7 @@ def cli():
 
 @cli.command()
 @click.option("--algorithm",
-              type=click.Choice(("lcmae", "flow")),
+              type=click.Choice(("lcmae", "postmae", "flow")),
               default="lcmae",
               help="Algorithm to use when planning")
 @click.option("--visualize/--no-visualize",
@@ -53,7 +53,9 @@ def plan(map_path, scenario_path, algorithm, visualize, debug):
     if algorithm == "lcmae":
         paths = lcmae.plan_evacuation(lvl, debug=debug)
     else:
-        paths = expansion.plan_evacuation(lvl, debug=debug)
+        paths = expansion.plan_evacuation(lvl,
+                                          postprocess=(algorithm == "postmae"),
+                                          debug=debug)
     if visualize:
         import evacsim.grid as grid
         grid.start(lvl, map_path, paths)
@@ -63,7 +65,7 @@ def plan(map_path, scenario_path, algorithm, visualize, debug):
 
 @cli.command()
 @click.argument("benchfile", type=click.File("r"))
-@click.option("-p", "--processes",
+@click.option("--processes",
               type=click.INT,
               help="Number of processors to use while benchmarking")
 @click.option("-f", "--format",
@@ -180,12 +182,16 @@ def check_paths(paths: List[List[int]], level: Level):
         if len(p) != path_len:
             print("Not all paths have equal sizes")
             exit(1)
+    previous: Set[int] = set()
     for t in range(path_len):
-        s = set()
+        current = set()
         for p in paths:
-            s.add(p[t])
-        if len(s) != len(paths):
+            current.add(p[t])
+        if p[t] in previous and p[t] != p[t-1]:
+            print(f"Direct trailing at time {t}")
+        if len(current) != len(paths):
             print(f"Collision at time {t}")
+        previous = current
     for agent, p in enumerate(paths):
         if level.scenario.agents[agent].origin != p[0]:
             print("Agent starts at a point different from the scenario")
