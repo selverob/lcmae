@@ -4,6 +4,7 @@ Evacuation planning based on network flow algorithms.
 
 from __future__ import annotations
 from collections import deque
+from itertools import groupby
 from sys import stderr
 from typing import Dict, List, Tuple, NamedTuple
 import networkx as nx
@@ -177,7 +178,6 @@ class FlowAgent():
         a.queue = self.queue
         self.queue = deque([a.path[-1]])
         self._stay()
-        #self.step()
 
     def done(self):
         return len(self.queue) == 0 #or (self.path and self.queue[0] == self.path[-1])
@@ -239,6 +239,17 @@ def plan_evacuation(lvl: Level, postprocess=False, debug=True) -> List[List[int]
                 break
     paths = reconstruct(lvl, best_sol.flow_dict, get_info(best_sol.node_ids))
     if postprocess:
-        return postprocess_paths(lvl, paths, debug)
+        unblocked_paths = postprocess_paths(lvl, paths, debug)
+        i = 2
+        while True:
+            if debug:
+                print(f"Postprocessing iteration {i}", file=stderr)
+            dedup = [list(map(lambda t: t[0], groupby(path))) for path in unblocked_paths]
+            new_paths = postprocess_paths(lvl, dedup, debug)
+            if new_paths == unblocked_paths:
+                break
+            unblocked_paths = new_paths
+            i += 1
+        return unblocked_paths
     else:
         return list(map(lambda p: extend(p, best_sol.t), paths))
