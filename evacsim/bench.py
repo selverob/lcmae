@@ -94,7 +94,7 @@ class BenchResult():
         only_retargeting = all(map(lambda a: a.type == AgentType.RETARGETING, lvl.scenario.agents))
         if run_expansion and only_retargeting:
             exp_start = process_time_ns()
-            exp_paths = expansion.plan_evacuation(lvl)
+            exp_paths = expansion.plan_evacuation(lvl, postprocess=True, debug=False)
             exp_stop = process_time_ns()
             result.expansion_makespan = len(exp_paths[0])
             result.expansion_time = (exp_stop - exp_start) / 1e9
@@ -176,20 +176,3 @@ def expand_lists(*lists) -> List[List]:
     for l in lists:
         res.append(l + [l[-1]] * (target_length - len(l)))
     return res
-
-
-# def run_benchmarks(benchmarks: List[Tuple[(str, str)]], parallelism: int, run_expansion: bool):
-#     results: List[BenchResult] = []
-#     with Pool(parallelism) as p:
-#         results = p.starmap(BenchResult.for_case, zip(benchmarks, [run_expansion] * len(benchmarks)))
-#     names = [bench_name(*t) for t in benchmarks]
-#     for name, result in zip(names, results):
-#         print(f"===============\n{name}")
-#         for k in result.stats:
-#             print(f"{k}:\t{result.stats[k]}")
-#         print_paths(f"bench_solutions/{name}.sol", result.paths)
-#         with open(f"bench_solutions/charts/{name}.csv", "w") as f:
-#             print(*[t.name for t in result.ratios], sep=", ", file=f)
-#             expanded_ratios = expand_lists(*result.ratios.values())
-#             for i in range(len(expanded_ratios[0])):
-#                 print(*["{:0.5}".format(float(l[i])) for l in expanded_ratios], sep=", ", file=f)

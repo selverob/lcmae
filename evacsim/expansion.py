@@ -124,7 +124,7 @@ def drawable_graph(g: nx.DiGraph) -> nx.DiGraph:
     for u, v in g.edges:
         u_label = g.node[u]["label"]
         v_label = g.node[v]["label"]
-        drawable.add_edge(u_label, v_label)#, label=g.edges[(u, v)]["flow"])
+        drawable.add_edge(u_label, v_label)
     return drawable
 
 
@@ -180,15 +180,15 @@ class FlowAgent():
         self._stay()
 
     def done(self):
-        return len(self.queue) == 0 #or (self.path and self.queue[0] == self.path[-1])
+        return len(self.queue) == 0
 
     def reservable(self, node: ReservationNode) -> bool:
         reservation = self.reservations.get(node)
         return reservation is None or reservation.agent == self.id
 
 
-def postprocess_paths(lvl: Level, paths: List[List[int]], debug: bool) -> List[List[int]]:
-    """Makes agents trying to move into occupied vertices wait for another turn."""
+def postprocess_iteration(lvl: Level, paths: List[List[int]], debug: bool) -> List[List[int]]:
+    """Makes agents trying to move into occupied vertices wait for another turn and resolve deadlocks."""
     reservations = ReservationGraph(lvl.g)
     agents: List[FlowAgent] = []
     for i, path in enumerate(paths):
@@ -200,6 +200,24 @@ def postprocess_paths(lvl: Level, paths: List[List[int]], debug: bool) -> List[L
     return [agent.path for agent in agents]
 
 
+def postprocess_paths(lvl: Level, paths: List[List[int]], debug: bool) -> List[List[int]]:
+    """Repeatedly postprocess deduplicated paths to get valid MAE paths shorter than from a single postprocess_iteration"""
+    i = 1
+    while True:
+        if debug:
+            print(f"Postprocessing iteration {i}", file=stderr)
+        dedup = [list(map(lambda t: t[0], groupby(path))) for path in paths]
+        new_paths = postprocess_iteration(lvl, dedup, debug)
+        if debug:
+            for j, path in enumerate(new_paths):
+                print(f"{j}: {' '.join(map(str, path))}", file=stderr)
+        if new_paths == paths:
+            break
+        paths = new_paths
+        i += 1
+    return paths
+
+
 class Solution(NamedTuple):
     flow: int
     flow_dict: Dict
@@ -207,7 +225,8 @@ class Solution(NamedTuple):
     t: int
 
 
-def plan_evacuation(lvl: Level, postprocess=False, debug=True) -> List[List[int]]:
+def evacuation_paths(lvl: Level, debug) -> List[List[int]]:
+    """Return the evacuation plan for a flow-based evacuation with the shortest makespan"""
     best_sol = Solution(0, {}, [], 0)
     highest_wrong = 0
     t = len(lvl.scenario.agents)
@@ -237,19 +256,12 @@ def plan_evacuation(lvl: Level, postprocess=False, debug=True) -> List[List[int]
             highest_wrong = t
             if t == best_sol.t - 1:
                 break
-    paths = reconstruct(lvl, best_sol.flow_dict, get_info(best_sol.node_ids))
+    return reconstruct(lvl, best_sol.flow_dict, get_info(best_sol.node_ids))
+
+
+def plan_evacuation(lvl: Level, postprocess=False, debug=True) -> List[List[int]]:
+    paths = evacuation_paths(lvl, debug)
     if postprocess:
-        unblocked_paths = postprocess_paths(lvl, paths, debug)
-        i = 2
-        while True:
-            if debug:
-                print(f"Postprocessing iteration {i}", file=stderr)
-            dedup = [list(map(lambda t: t[0], groupby(path))) for path in unblocked_paths]
-            new_paths = postprocess_paths(lvl, dedup, debug)
-            if new_paths == unblocked_paths:
-                break
-            unblocked_paths = new_paths
-            i += 1
-        return unblocked_paths
+        return postprocess_paths(lvl, paths, debug)
     else:
-        return list(map(lambda p: extend(p, best_sol.t), paths))
+        return list(map(lambda p: extend(p, len(max(paths, key=len))), paths))
