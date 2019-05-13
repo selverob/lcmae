@@ -9,13 +9,25 @@ max-flow based one and of visualizing it.
 
 ## Installation
 
+### Prerequisites
+
+There is nothing that would stop `evacsim` from running on Windows but it has
+never been tested so it's safest to run it on Linux.
+
+To run evacsim, you need to have Python 3.7 installed. The GUI requires Python's
+Tkinter library and evacsim will not start without it. Some distros (most
+famously, Ubuntu and Debian) package the Tk portions of Python separately so you
+need to find the correct package to install, if you don't already have it.
+
+On Ubuntu, the package with Tkinter is called `python3-tk`.
+
 ### (Optional) Activate Virtualenv
 
 This is not required but it will help your system not to get polluted with
 simulator's dependencies.
 
 - Change into the directory in which this README is located
-- Run `python -m venv .`
+- Run `python3.7 -m venv .`
 - Run `source bin/activate` (if you are using a POSIX-compatible shell)
 
 ### Install the simulator
