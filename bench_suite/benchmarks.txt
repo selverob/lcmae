@@ -1,9 +1,4 @@
-bench_suite/AR0045SR.map: bench_suite/AR0045SR_238.scen
-bench_suite/blocker.map: bench_suite/blocker_allstatic.scen bench_suite/blocker_clump.scen bench_suite/blocker_all.scen bench_suite/blocker_half.scen bench_suite/blocker_third.scen
-bench_suite/concert_tight.map: bench_suite/concert_tight_r.scen bench_suite/concert_tight_allstat.scen bench_suite/concert_tight_staticcrowd.scen
-bench_suite/concert.map: bench_suite/concert_r.scen bench_suite/concert_allstat.scen bench_suite/concert_staticcrowd.scen
-bench_suite/coop.map: bench_suite/coop1.scen bench_suite/coop2.scen
-bench_suite/hall.map: bench_suite/hall.scen
-bench_suite/office_tight.map: bench_suite/office.scen
-bench_suite/office.map: bench_suite/office.scen
-bench_suite/shops.map: bench_suite/shops_all.scen bench_suite/shops_allstatic.scen
+bench_suite/blocker.map: bench_suite/blocker_allstatic.scen bench_suite/blocker_r.scen bench_suite/blocker_half.scen bench_suite/blocker_third.scen
+bench_suite/concert.map: bench_suite/concert_r.scen bench_suite/concert_allstatic.scen bench_suite/concert_staticcrowd.scen
+bench_suite/office.map: bench_suite/office_r.scen bench_suite/office_half.scen bench_suite/office_sixth.scen
+bench_suite/shops.map: bench_suite/shops_r.scen bench_suite/shops_allstatic.scen bench_suite/shops_sixth.scen bench_suite/shops_quarter.scen
