@@ -1,0 +1,4 @@
+bench_suite/shops.map bench_suite/shops_allstatic.scen bench_solutions/shops-shops_allstatic.out
+bench_suite/shops.map bench_suite/shops_quarter.scen bench_solutions/shops-shops_quarter.out
+bench_suite/shops.map bench_suite/shops_r.scen bench_solutions/shops-shops_r.out
+bench_suite/shops.map bench_suite/shops_sixth.scen bench_solutions/shops-shops_sixth.out

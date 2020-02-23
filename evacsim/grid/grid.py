@@ -36,7 +36,7 @@ class Grid(arcade.Window):
 
         self.status_text = "Drawing walls"
         arcade.set_background_color(arcade.color.WHITE)
-        self.set_update_rate(1 / 5)
+        self.set_update_rate(1 / 8)
 
     def on_draw(self):
         if not self.walls.dirty() and not self.danger.dirty() and not self.agents.dirty():

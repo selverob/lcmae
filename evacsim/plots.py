@@ -50,8 +50,8 @@ def chart_groups(result_names: List[str]) -> List[Tuple[str, List[str]]]:
 def group_plot(axis: plt.Axes, title: str, names: List[str], ratios: List[Dict[AgentType, List[float]]]):
     """Generate a joint plot for a benchmark result group on `axis`"""
     axis.set_title(title)
-    axis.set_xlabel("Čas")
-    axis.set_ylabel("Agenty v bezpečí (%)")
+    axis.set_xlabel("Time")
+    axis.set_ylabel("Safe agents (%)")
     axis.set_yticks(range(0, 101, 10))
     axis.grid(True)
     legend: Tuple[List[plt.Line2D], List[str]] = ([], [])

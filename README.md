@@ -53,17 +53,17 @@ mouse button adds objects of a given type to the map, right mouse button removes
 them. Keyboard buttons control what object is added to the map or removed from
 it:
 
-|   Key   | Function                                    |
-|:-------:|---------------------------------------------|
-|    w    | Draw walls                                  |
-|    d    | Draw danger                                 |
-|    r    | Draw retargeting agents                     |
-|    f    | Draw closest-frontier agents                |
-|    s    | Draw static agents                          |
-|    p    | Draw panicked agents                        |
-|    h    | Print coordinates of clicked-on squares     |
-|    m    | Save map and scenario                       |
-|  Space  | Animate the plan passed on the command line |
+|   Key   | Function                                            |
+|:-------:|-----------------------------------------------------|
+|    w    | Draw walls                                          |
+|    d    | Draw danger                                         |
+|    r    | Draw retargeting agents                             |
+|    f    | Draw closest-frontier agents                        |
+|    s    | Draw static agents (second click sets their target) |
+|    p    | Draw panicked agents                                |
+|    h    | Print coordinates of clicked-on squares             |
+|    m    | Save map and scenario                               |
+|  Space  | Animate the plan passed on the command line         |
 
 Modified maps and scenarios are always saved into files called `out.map` and
 `out.scen` in the current directory.
