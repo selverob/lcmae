@@ -7,6 +7,17 @@ the Faculty of Information Technologies of Czech Technical University.
 It's capable of planning an evacuation using either the LC-MAE algorithm or a
 max-flow based one and of visualizing it.
 
+## Note
+
+This code was produced as part of a research project (my bachelor thesis). As
+such, it's not in an ideal shape, since focus was on iteration and testing
+different approaches. I'd love to get the time to improve it (or just rewrite it
+completely in a more performant way), but, unfortunately, that has not
+materialized yet. Don't judge me too harshly.
+
+This research has been supported by GAČR - the Czech Science Foundation, grant
+registration number 19-17966S.
+
 ## Installation
 
 ### Prerequisites
